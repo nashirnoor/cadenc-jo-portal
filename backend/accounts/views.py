@@ -1,5 +1,5 @@
 from rest_framework.generics import GenericAPIView
-from .serializers import UserRegisterSerializer,LoginSerializer,PasswordResetRequestSerializer, SetNewPasswordSerializer,LogoutUserSerializer, GoogleSignInSerializer,RecruiterRegisterSerializer,CompanyProfileSerializer
+from .serializers import UserRegisterSerializer,LoginSerializer,PasswordResetRequestSerializer, SetNewPasswordSerializer,LogoutUserSerializer, GoogleSignInSerializer,RecruiterRegisterSerializer,CompanyProfileSerializer,SkillSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from .utils import send_code_to_user
@@ -14,10 +14,13 @@ from .serializers import UserListSerializer, RecruiterListSerializer
 from rest_framework.permissions import IsAdminUser
 from rest_framework import generics,viewsets
 from rest_framework.decorators import action
+from .models import Skill
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework.pagination import PageNumberPagination
+
 
 
 
@@ -39,6 +42,9 @@ class RegisterUserView(GenericAPIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+from django.core.mail import send_mail
+from django.conf import settings
+    
 class RegisterRecruiterView(GenericAPIView):
     serializer_class = RecruiterRegisterSerializer
 
@@ -48,12 +54,70 @@ class RegisterRecruiterView(GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             recruiter = serializer.data
-            send_code_to_user(recruiter['email'])
+            # Notify admin
+            send_mail(
+                'New Recruiter Registration',
+                f'A new recruiter has registered with email {recruiter["email"]}. Please review and approve or reject the registration.',
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.ADMIN_EMAIL],
+                fail_silently=False,
+            )
             return Response({
                 'data': recruiter,
-                'message': 'Hi, thanks for signing up. A passcode has been sent to your email.'
+                'message': 'Registration successful. An admin will review your request.'
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+from .serializers import RecruiterListSerializer 
+from rest_framework.views import APIView
+
+from .utils import send_normal_email  # Ensure you have this import
+
+class PendingRecruitersView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        pending_recruiters = Recruiter.objects.filter(is_approved=False)
+        serializer = RecruiterListSerializer(pending_recruiters, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, recruiter_id):
+        action = request.data.get('action')
+        try:
+            recruiter = Recruiter.objects.get(id=recruiter_id, is_approved=False)
+            if action == 'approve':
+                recruiter.is_approved = True
+                recruiter.is_verified = True  # Mark recruiter as verified
+                recruiter.save()
+                
+                # Send approval email
+                email_body = f"Hi {recruiter.first_name}, your recruiter account has been approved. You can now log in using the following link: http://localhost:5173/login"
+                email_data = {
+                    'email_subject': 'Recruiter Account Approved',
+                    'email_body': email_body,
+                    'to_email': recruiter.email,
+                }
+                send_normal_email(email_data)
+                
+                return Response({'message': 'Recruiter approved'}, status=status.HTTP_200_OK)
+            elif action == 'reject':
+                # Send rejection email before deleting
+                email_body = f"Hi {recruiter.first_name}, we regret to inform you that your recruiter account has been rejected."
+                email_data = {
+                    'email_subject': 'Recruiter Account Rejected',
+                    'email_body': email_body,
+                    'to_email': recruiter.email,
+                }
+                send_normal_email(email_data)
+                
+                recruiter.delete()
+                return Response({'message': 'Recruiter rejected'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+        except Recruiter.DoesNotExist:
+            return Response({'error': 'Recruiter not found'}, status=status.HTTP_404_NOT_FOUND)
+
     
 
 class VerifyUserEmail(GenericAPIView):
@@ -85,6 +149,8 @@ class LoginUserView(GenericAPIView):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
     
 
 
@@ -171,21 +237,30 @@ class GoogleOauthSignInview(GenericAPIView):
     
 
 
-
-
+    
+class UserPagination(PageNumberPagination):
+    page_size = 5 # Number of users per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class UserListView(generics.ListAPIView):
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = UserPagination
 
     def get_queryset(self):
         return User.objects.filter(user_type='normal')
+
+class CustomPaginationrecruiter(PageNumberPagination):
+    page_size = 8
+    page_size_query_param = 'page_size'
+    max_page_size = 50
 
 class RecruiterListView(generics.ListAPIView):
     queryset = Recruiter.objects.all()
     serializer_class = RecruiterListSerializer
     permission_classes = [IsAuthenticated]
-
+    pagination_class = CustomPaginationrecruiter
 
 
 # views.py
@@ -230,13 +305,51 @@ class JobListView(generics.ListAPIView):
     def get_queryset(self):
         return Job.objects.filter(recruiter=self.request.user)
     
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+    
+
+from django.db.models import Q
 
 @api_view(['GET'])
 def job_list(request):
-    print("helll")
-    jobs = Job.objects.all()
-    serializer = JobSerializer(jobs, many=True)
+    job_title = request.query_params.get('job_title', '')
+    job_location = request.query_params.get('job_location', '')
+
+    jobs = Job.objects.all().order_by('-created_at')
+
+    if job_title:
+        jobs = jobs.filter(job_title__icontains=job_title)
+    if job_location:
+        jobs = jobs.filter(job_location__icontains=job_location)
+
+    paginator = StandardResultsSetPagination()
+    result_page = paginator.paginate_queryset(jobs, request)
+    serializer = JobSerializer(result_page, many=True, context={'request': request})
+    return paginator.get_paginated_response(serializer.data)
+
+@api_view(['GET'])
+def job_detail(request, pk):
+    try:
+        job = Job.objects.get(pk=pk)
+    except Job.DoesNotExist:
+        return Response(status=404)
+    
+    serializer = JobSerializer(job, context={'request': request})
     return Response(serializer.data)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_job(request, job_id):
+    try:
+        job = Job.objects.get(id=job_id, recruiter=request.user)
+    except Job.DoesNotExist:
+        return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    job.delete()
+    return Response({"message": "Job deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -268,6 +381,8 @@ def job_list(request):
 @api_view(['POST'])
 def create_company_profile(request):
     user = request.user
+    print(request.data)
+
     if user.user_type != 'recruiter':
         return Response({'error': 'Only recruiters can create a company profile.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -281,28 +396,64 @@ def create_company_profile(request):
     if serializer.is_valid():
         company_profile = serializer.save(recruiter=recruiter)
         return Response(CompanyProfileSerializer(company_profile).data, status=status.HTTP_201_CREATED)
+    print(serializer.errors)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
 
-@api_view(['PUT'])
+# @api_view(['PUT'])
 # @permission_classes([IsAuthenticated])
+# def update_company_profile(request, pk):
+#     try:
+#         company_profile = CompanyProfile.objects.get(pk=pk)
+#     except CompanyProfile.DoesNotExist:
+#         return Response({'error': 'Company profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+#     if company_profile.recruiter != request.user:
+#         return Response({'error': 'You do not have permission to edit this profile.'}, status=status.HTTP_403_FORBIDDEN)
+
+#     serializer = CompanyProfileSerializer(company_profile, data=request.data, partial=True)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['PUT'])
+# @permission_classes([IsAuthenticated])
+# def update_company_profile(request, pk):
+#     try:
+#         company_profile = CompanyProfile.objects.get(pk=pk)
+#     except CompanyProfile.DoesNotExist:
+#         return Response({'error': 'Company profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+#     serializer = CompanyProfileSerializer(company_profile, data=request.data, partial=True)
+#     print(serializer)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_company_profile(request, pk):
     try:
         company_profile = CompanyProfile.objects.get(pk=pk)
     except CompanyProfile.DoesNotExist:
         return Response({'error': 'Company profile not found.'}, status=status.HTTP_404_NOT_FOUND)
-    
-    if company_profile.recruiter != request.user:
-        return Response({'error': 'You do not have permission to edit this profile.'}, status=status.HTTP_403_FORBIDDEN)
+
+    print("Received data:", request.data)
+    print("Files:", request.FILES)
 
     serializer = CompanyProfileSerializer(company_profile, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
+    print("Serializer errors:", serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -332,19 +483,72 @@ class LogoutView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+from django.db import IntegrityError
 
 class CreateJobView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def post(self, request):
         serializer = JobSerializer(data=request.data)
         if serializer.is_valid():
-            job = serializer.save(recruiter=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        print(serializer.errors)  # Print errors to debug
+            try:
+                job = serializer.save(recruiter=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except IntegrityError as e:
+                print(f"IntegrityError: {str(e)}")  # Log the error
+                return Response(
+                    {"error": "You have already posted a job with this title."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        print(f"Serializer errors: {serializer.errors}")  # Log serializer errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def get(self, request):
         jobs = Job.objects.filter(recruiter=request.user)
         serializer = JobSerializer(jobs, many=True)
         return Response(serializer.data)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_company_profile(request):
+    try:
+        company_profile = CompanyProfile.objects.get(recruiter=request.user)
+        return Response(status=status.HTTP_200_OK)
+    except CompanyProfile.DoesNotExist:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+class CustomPagination(PageNumberPagination):
+    page_size = 9
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class SkillListCreateAPIView(APIView):
+    pagination_class = CustomPagination
+
+    def get(self, request):
+        skills = Skill.objects.all()
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(skills, request)
+        serializer = SkillSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request):
+        serializer = SkillSerializer(data=request.data)
+        if serializer.is_valid():
+            skill_name = serializer.validated_data['name']
+            existing_skill = Skill.objects.filter(name=skill_name).first()
+            if existing_skill:
+                return Response({'error': 'Skill already exists'}, status=status.HTTP_409_CONFLICT)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SkillDeleteAPIView(APIView):
+    def delete(self, request, pk):
+        try:
+            skill = Skill.objects.get(pk=pk)
+        except Skill.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        skill.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

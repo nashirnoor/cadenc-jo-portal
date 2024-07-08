@@ -7,7 +7,6 @@ import { FiPhoneCall, FiEdit3, FiUpload } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
 import { companies, jobs } from "../utils/data";
 import CustomButton from "../users/components/Custombutton";
-import JobCard from "../users/components/JobCard";
 import Loading from "../users/components/Loading";
 import TextInput from "../users/components/TextInput";
 import Footer from "../users/components/Footer";
@@ -15,8 +14,10 @@ import { useNavigate } from "react-router-dom";
 import Header from "./RecruiterHeader";
 import axios from "axios";
 import { FaUsers } from "react-icons/fa";
-
 import axiosInstance from '../users/utils/axiosInstance';
+import JobCardRecuiter from "./components/JobCardRecuiter";
+
+import { toast } from 'sonner';
 
 
 
@@ -33,11 +34,9 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
       setValue("contact_number", companyInfo.contact_number);
       setValue("email_address", companyInfo.email_address);
       setValue("company_strength", companyInfo.company_strength);
+      setValue("company_logo", companyInfo.company_logo);
     }
   }, [companyInfo, setValue]);
-
-  const user = JSON.parse(localStorage.getItem('user'));
-  const jwt_access = localStorage.getItem('access');
 
   const closeModal = () => setOpen(false);
 
@@ -45,22 +44,22 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
     const formData = new FormData();
     for (const key in data) {
       if (key === "company_logo") {
-        formData.append(key, data[key][0]); // Get the file object
+        if (data[key] instanceof FileList && data[key].length > 0) {
+          formData.append(key, data[key][0]);
+        } else if (typeof data[key] === 'string' && data[key].startsWith('http')) {
+          // If it's a URL, don't append it to formData
+          continue;
+        }
       } else {
         formData.append(key, data[key]);
       }
-    }
+    } 
+    const jwt_access = localStorage.getItem('access') ? JSON.parse(localStorage.getItem('access')) : null;
+    console.log(jwt_access)
 
-    const url = companyInfo 
-      ? `http://localhost:8000/api/v1/auth/company-profile/update/${companyInfo.id}/`
-      : 'http://localhost:8000/api/v1/auth/company-profile/';
-
-    const method = companyInfo ? 'put' : 'post';
-
-    axiosInstance[method](url, formData, {
+    axiosInstance.put(`http://localhost:8000/api/v1/auth/company-profile/update/${companyInfo.id}/`, formData, {
       headers: {
         'Authorization': `Bearer ${jwt_access}`,
-        'Content-Type': 'multipart/form-data',
       },
     })
       .then(response => {
@@ -84,7 +83,7 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
             <div className="fixed inset-0 bg-black bg-opacity-25" onClick={closeModal}></div>
             <div className="relative bg-white rounded-2xl text-left shadow-xl transform transition-all max-w-md w-full p-6 z-10">
               <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                {companyInfo ? "Edit Company Profile" : "Create Company Profile"}
+                Edit Company Profile
               </h3>
               <form className="w-full mt-2 flex flex-col gap-5" onSubmit={handleSubmit(handleFormSubmit)} encType="multipart/form-data">
                 <TextInput
@@ -115,8 +114,8 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
                   label='Email'
                   placeholder='Company Email'
                   type='email'
-                  register={register("email_address", { 
-                    required: "Email is required!", 
+                  register={register("email_address", {
+                    required: "Email is required!",
                     pattern: {
                       value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
                       message: "Invalid email address"
@@ -132,6 +131,7 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
                   register={register("company_strength", { required: "Company Strength is required!" })}
                   error={errors.company_strength ? errors.company_strength.message : ""}
                 />
+
                 <div className='w-full mt-2'>
                   <label className='text-gray-600 text-sm mb-1'>Company Profile Photo</label>
                   {companyInfo && companyInfo.company_logo && (
@@ -139,17 +139,19 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
                       <img
                         src={companyInfo.company_logo}
                         alt='Company Logo'
-                        className='w-16 h-16 object-cover rounded-md'
+                        className='w-16 h-16 object-cover rounded-md cursor-pointer'
+                        onClick={() => document.getElementById('fileInput').click()}
                       />
                     </div>
                   )}
                   <input
-                      type='file'
-                      accept='image/*'
-                      {...register("company_logo", { required: "Company Profile Photo is required" })}
-                      className='w-full border border-gray-300 rounded-md p-2'
-                    />
-
+                    type='file'
+                    accept='image/*'
+                    id='fileInput'
+                    style={{ display: 'none' }}
+                    {...register("company_logo")}
+                    className='w-full border border-gray-300 rounded-md p-2'
+                  />
                   {errors.company_logo && (
                     <span className='text-xs text-red-500 mt-0.5'>
                       {errors.company_logo.message}
@@ -159,7 +161,7 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
                 <div className='mt-4'>
                   <CustomButton
                     type='submit'
-                    containerStyles='inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-8 py-2 text-sm font-medium text-white hover:bg-[#1d4fd846] hover:text-[#1d4fd8] focus:outline-none '
+                    containerStyles='inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-8 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none'
                     title={"Submit"}
                   />
                 </div>
@@ -198,6 +200,32 @@ const CompanyProfile = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const checkForm = async () => {
+      try {
+        const jwt_access = JSON.parse(localStorage.getItem('access'));
+        const profileRes = await axios.get('http://localhost:8000/api/v1/auth/check-company-profile/', {
+          headers: {
+            'Authorization': `Bearer ${jwt_access}`
+          }
+        });
+        
+        if (profileRes.status === 204) {
+          // No content means no company profile
+          navigate("/company-form");
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error checking company profile:', error);
+        // Handle error (e.g., redirect to login page if unauthorized)
+        navigate("/login");
+      }
+    };
+
+    checkForm();
+  }, [navigate]);
+
+  useEffect(() => {
     let jwt_a = localStorage.getItem('access');
     jwt_a = JSON.parse(jwt_a);
     const fetchJobs = async () => {
@@ -207,6 +235,7 @@ const CompanyProfile = () => {
             'Authorization': `Bearer ${jwt_a}`,
           }
         });
+        console.log(response)
         setJobs(response.data);
       } catch (err) {
         setError(err);
@@ -218,6 +247,24 @@ const CompanyProfile = () => {
     fetchJobs();
   }, []);
 
+  const handleDelete = async (jobId) => {
+    let jwt_a = localStorage.getItem('access');
+    jwt_a = JSON.parse(jwt_a);
+    try {
+      await axios.delete(`http://localhost:8000/api/v1/auth/jobs/delete/${jobId}/`, {
+        headers: {
+          'Authorization': `Bearer ${jwt_a}`,
+        }
+      });
+      // Remove the deleted job from the state
+      setJobs(jobs.filter(job => job.id !== jobId));
+      // Show success message
+      toast.success('Job deleted successfully');
+    } catch (error) {
+      console.error("Error deleting job:", error);
+      toast.error('Failed to delete job');
+    }
+  };
 
 
   const getCompanyProfile = async () => {
@@ -251,8 +298,6 @@ const CompanyProfile = () => {
   };
 
 
-
-
   useEffect(() => {
     if (!jwt_access && !user) {
       navigate("/login");
@@ -276,18 +321,7 @@ const CompanyProfile = () => {
     }
   };
 
-  const handleFormSubmit = (formData) => {
-    axios.post('http://127.0.0.1:8000/api/v1/auth/company-profile/', formData, {
-      headers: {
-        Authorization: `Bearer ${jwt_access}`
-      }
-    })
-      .then(response => {
-        setCompanyInfo(response.data);
-        setOpenForm(false);
-      })
-      .catch(error => console.error('Error updating company profile:', error));
-  };
+
 
   if (isLoading) {
     return <Loading />;
@@ -296,49 +330,47 @@ const CompanyProfile = () => {
   return (
     <>
       <Header />
-      <div className='container mx-auto p-5'>
-        <div className=''>
-          <div className='w-full flex flex-col md:flex-row gap-3 justify-between'>
-            <h2 className='text-gray-600 text-xl font-semibold'>
-              Welcome, {companyInfo?.company_name ?? "Company"}
+      <div className="container mx-auto p-5">
+        <div>
+          <div className="w-full flex flex-col md:flex-row gap-3 justify-between items-center">
+            <h2 className="text-gray-800 text-2xl font-semibold">
+              Welcome, {companyInfo?.company_name ?? 'Company'}
             </h2>
-
-            <div className='flex items-center justify-center py-5 md:py-0 gap-4'>
+            <div className="flex items-center gap-4">
               <button
                 onClick={handleLogout}
-                className="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded"
+                className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded"
               >
                 Logout
               </button>
-
-              <Link to='/upload-job'>
+              <Link to="/upload-job">
                 <CustomButton
-                  title='Upload Job'
-                  containerStyles={`text-blue-600 py-1.5 px-3 md:px-5 focus:outline-none rounded text-sm md:text-base border border-blue-600`}
+                  title="Upload Job"
+                  containerStyles="text-blue-600 py-1.5 px-3 md:px-5 focus:outline-none rounded text-sm md:text-base border border-blue-600"
                 />
               </Link>
             </div>
           </div>
 
-          <div className='w-full flex flex-col md:flex-row justify-start md:justify-between mt-4 md:mt-8 text-sm'>
-            <p className='flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full'>
-              <HiLocationMarker /> {companyInfo?.company_location ?? "No Location"}
+          <div className="w-full flex flex-col md:flex-row justify-between mt-8 space-y-4 md:space-y-0 md:space-x-4">
+            <p className="flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full">
+              <HiLocationMarker /> {companyInfo?.company_location ?? 'No Location'}
             </p>
-            <p className='flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full'>
-              <FiPhoneCall /> {companyInfo?.contact_number ?? "No Contact"}
+            <p className="flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full">
+              <FiPhoneCall /> {companyInfo?.contact_number ?? 'No Contact'}
             </p>
-            <p className='flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full'>
-            <FaUsers />   {companyInfo?.company_strength ?? "No Company Strength"}
+            <p className="flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full">
+              <FaUsers /> {companyInfo?.company_strength ?? 'No Company Strength'} Employees
             </p>
-            <p className='flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full'>
-              <AiOutlineMail /> {companyInfo?.email_address ?? "No Email"}
+            <p className="flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full">
+              <AiOutlineMail /> {companyInfo?.email_address ?? 'No Email'}
             </p>
             {companyInfo?.company_logo && (
-  <div className='company-logo'>
-    <img src={companyInfo.company_logo} alt="Company Logo" className='w-24 h-24 object-cover rounded-full' />
-  </div>
-)}
-                   <div>
+              <div className="company-logo">
+                <img src={companyInfo.company_logo} alt="Company Logo" className="w-24 h-24 object-cover rounded-full" />
+              </div>
+            )}
+            <div>
             <button
               onClick={() => setOpenForm(true)}
               className="inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition duration-150 ease-in-out"
@@ -346,32 +378,25 @@ const CompanyProfile = () => {
               Edit Profile
             </button>
             </div>
-            <CompanyForm open={openForm} setOpen={setOpenForm} companyInfo={companyInfo} onSubmit={handleFormSubmit} />
+             
+           
+          </div>
+         
 
-            <div className='flex flex-col items-center mt-10 md:mt-0'>
-              <span className='text-xl'>{info?.jobPosts?.length}</span>
-              <p className='text-blue-600 '>Job Post</p>
-            </div>
+          <CompanyForm open={openForm} setOpen={setOpenForm} companyInfo={companyInfo}/>
+
+          <div className="flex flex-col items-center mt-10 md:mt-0">
+            <span className="text-xl font-bold">{jobs?.length}</span>
+            <p className="text-blue-600">Job Post</p>
           </div>
         </div>
 
-        <div className='w-full mt-20 flex flex-col gap-2'>
-          <p>Jobs Posted</p>
-
-          {/* <div className='flex flex-wrap gap-3'>
-            {jobs?.map((job, index) => {
-              const data = {
-                name: info?.name,
-                email: info?.email,
-                ...job,
-              };
-              return <JobCard job={data} key={index} />;
-            })}
-          </div> */}
-         <div className='flex flex-wrap gap-3'>
+        <div className="w-full mt-20">
+          <p className="text-lg font-semibold mb-4">Jobs Posted</p>
+          <div className="flex flex-wrap gap-4">
             {Array.isArray(jobs) ? (
               jobs.length > 0 ? (
-                jobs.map(job => <JobCard key={job.id} job={{ ...job, companyInfo }} />)
+                jobs.map(job => <JobCardRecuiter key={job.id} job={{ ...job, companyInfo }} onDelete={handleDelete}/>)
               ) : (
                 <p>No jobs found.</p>
               )

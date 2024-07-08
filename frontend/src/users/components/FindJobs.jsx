@@ -5,48 +5,93 @@ import { BsStars } from "react-icons/bs";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import Header from "../components/Header";
 import { experience, jobTypes, jobs } from "../../../src/utils/data"
-import  CustomButton  from "./Custombutton";
+import CustomButton from "./Custombutton";
 import ListBox from "./ListBox";
+import axios from "axios";
 import JobCard from "./JobCard";
 import SearchHeader from "./SearchHeader";
+import { useEffect } from "react";
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
+import Footer from "./Footer";
+
 
 const FindJobs = () => {
   const [sort, setSort] = useState("Newest");
-  const [page, setPage] = useState(1);
   const [numPage, setNumPage] = useState(1);
   const [recordCount, setRecordCount] = useState(0);
   const [data, setData] = useState([]);
 
-  const [jobLocation, setJobLocation] = useState("");
-  const [filterJobTypes, setFilterJobTypes] = useState([]);
-  const [filterExp, setFilterExp] = useState([]);
+
 
   const [isFetching, setIsFetching] = useState(false);
 
-  const location = useLocation();
+  // const location = useLocation();
   const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
-  const filterJobs = (val) => {
-    if (filterJobTypes?.includes(val)) {
-      setFilterJobTypes(filterJobTypes.filter((el) => el != val));
-    } else {
-      setFilterJobTypes([...filterJobTypes, val]);
-    }
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const [location, setLocation] = useState('');
 
-  const filterExperience = async (e) => {
-    setFilterExp(e);
-  };
+  const [searchTitle, setSearchTitle] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+
+
+
+
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`http://localhost:8000/api/v1/auth/api/jobs/?page=${currentPage}&job_title=${searchTitle}&job_location=${searchLocation}`);
+        console.log("API Response:", response.data);
+        setJobs(response.data.results);
+        setTotalPages(Math.ceil(response.data.count / 10)); 
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch jobs');
+        console.error(err);
+        setLoading(false);
+      }
+    };
   
+    fetchJobs();
+  }, [currentPage, searchTitle, searchLocation]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchTitle(searchQuery);
+    setSearchLocation(location);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+
 
   return (
+
     <div>
-        <Header/>
+      <Header />
       <SearchHeader
-        title='Find Your Dream Job with Ease'
-        type='home'
-        handleClick={() => {}}
-      />
+  title='Find Your Dream Job with Ease'
+  type='home'
+  handleClick={handleSearch}
+  searchQuery={searchQuery}
+  setSearchQuery={setSearchQuery}
+  location={location}
+  setLocation={setLocation}
+/>
 
       <div className='container mx-auto flex gap-6 2xl:gap-10 md:px-5 py-0 md:py-6 bg-[#f7fdfd]'>
         <div className='hidden md:flex flex-col w-1/6 h-fit bg-white shadow-sm'>
@@ -78,6 +123,9 @@ const FindJobs = () => {
               ))}
             </div>
           </div>
+
+
+
 
           <div className='py-2 mt-4'>
             <div className='flex justify-between mb-3'>
@@ -122,21 +170,24 @@ const FindJobs = () => {
           </div>
 
           <div className='w-full flex flex-wrap gap-4'>
-            {jobs.map((job, index) => (
-              <JobCard job={job} key={index} />
+            {jobs.map((job) => (
+              <JobCard job={job} key={job.id} />
             ))}
           </div>
-
-          {numPage > page && !isFetching && (
-            <div className='w-full flex items-center justify-center pt-16'>
-              <CustomButton
-                title='Load More'
-                containerStyles={`text-blue-600 py-1.5 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600`}
-              />
-            </div>
-          )}
+          
+          <div className='w-full flex items-center justify-center pt-16'>
+          <Stack spacing={2}>
+          <Pagination 
+            count={totalPages} 
+            page={currentPage} 
+            onChange={handlePageChange} 
+            color="primary" 
+          />
+        </Stack>
+      </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };

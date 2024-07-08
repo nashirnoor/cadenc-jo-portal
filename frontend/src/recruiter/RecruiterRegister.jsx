@@ -23,8 +23,8 @@ const RecruiterRegister = () => {
     e.preventDefault();
     const { email, first_name, phone_number, company_name, password, password2 } = formData;
 
-    if (!email || !first_name || !company_name || !password || !password2) {
-      setError('All fields except phone number are required');
+    if (!email || !first_name || !company_name || !password || !password2 || !phone_number) {
+      setError('All fields are required');
       return;
     }
 
@@ -58,11 +58,11 @@ const RecruiterRegister = () => {
     try {
       const res = await axios.post("http://localhost:8000/api/v1/auth/recruiter/", formData);
       if (res.status === 201) {
-        navigate("/otp/verify");
+        navigate("/login");
         toast.success(res.data.message);
       }
     } catch (error) {
-      setError(error.response.data.message || 'An error occurred');
+      setError(error.response.data.email || error.response.data.phone_number || 'An error occurred');
     }
   };
 

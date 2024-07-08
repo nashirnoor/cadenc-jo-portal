@@ -6,7 +6,7 @@ import Profile from './users/components/Profile';
 import VerifyEmail from './users/components/VerifyEmail';
 import ForgotPassword from './users/components/ForgotPassword';
 import Landing from './users/components/Landing';
-import { ToastContainer } from 'react-toastify';
+import { Toaster } from 'sonner';
 import ResetPassword from './users/components/ResetPassword';
 import 'react-toastify/dist/ReactToastify.css';
 import AdminLogin from './admin/components/AdminLogin';
@@ -23,7 +23,11 @@ import CompanyProfile from './recruiter/CompanyProfile';
 import UploadJob from './recruiter/UploadJob';
 import About_recruiter from './recruiter/About_recruiter';
 import ProtectedRouteRecruiter from './recruiter/components/ProtectedRouteRecruiter';
-
+import AdminRecruiterApproval from './admin/components/AdminRecruiterApproval';
+import CompanyForm from './recruiter/CompanyForm';
+import SkillManagement from './admin/components/SkillManagement';
+import UserDetailForm from './recruiter/components/UserDetailForm';
+import UserProfile from './users/components/UserProfile';
 function App() {
 
   return (
@@ -62,23 +66,31 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/admin-home" element={<AdminHome />} />
           <Route path='/recruiter-list' element={<RecruiterList/>}/>
+          <Route path='/recruiter-approval' element={<AdminRecruiterApproval/>} />
+          <Route path='/skill-management' element={<SkillManagement/>} />
+
 
         </Route>
 
         <Route path='/recruiter-home' element={<RecruiterHome/>} />
         {/* <Route path='/job-detail' element={<JobDetail/>} /> */}
-        <Route path='/job-detail' element={<JobDetail />} />
+        {/* <Route path='/job-detail' element={<JobDetail />} /> */}
+        <Route path='/company-form' element={<CompanyForm/>} />
 
         <Route path='/company-list' element={<Companies/>} />
         <Route path='/company-profile' element={<CompanyProfile/>} />
         <Route path='/upload-job' element={<UploadJob/>} />
         <Route path='/about-recruiter' element={<About_recruiter/>} />
+        <Route path='/user-detail-form' element={<UserDetailForm />} />
+        <Route path='/user-profile' element={<UserProfile/>} />
+
+        <Route path="/job/:id" element={<JobDetail/>} />
 
       
 
        
       </Routes>
-      <ToastContainer />
+      <Toaster position='top-right' richColors />
     </Router>
 
 

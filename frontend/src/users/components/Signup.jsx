@@ -54,14 +54,19 @@ const Signup = () => {
         e.preventDefault();
         const { email, first_name, phone_number, password, password2 } = formdata;
 
-        if (!email || !first_name || !password || !password2) {
-            setError("All fields except phone number are required");
+        if (!email || !first_name || !password || !password2 || !phone_number) {
+            setError("All fields are required");
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             setError("Please enter a valid email address");
+            return;
+        }
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(phone_number)) {
+            setError("Please enter a valid 10-digit phone number");
             return;
         }
 
@@ -79,8 +84,8 @@ const Signup = () => {
                 toast.success(response.message);
             }
         } catch (error) {
-            setError("Registration failed. Please try again.");
-        }
+            setError(error.response.data.email || error.response.data.phone_number || 'An error occurred');
+          }
     };
 
     const { email, first_name, phone_number, password, password2 } = formdata;
@@ -91,7 +96,6 @@ const Signup = () => {
                 <div className="bg-white px-10 py-20 rounded-3xl border-2 border-gray-200">
                     <h3 className="text-5xl font-semibold pl-5">Register Now</h3>
                     <form onSubmit={handleSubmit}>
-                        <p style={{ color: "red", padding: "1px" }}>{error ? error : ""}</p>
 
                         <div className="mt-8">
                             <div>
@@ -114,6 +118,7 @@ const Signup = () => {
                                     name="phone_number"
                                     value={phone_number}
                                     onChange={handleOnchange}
+                                    pattern="[0-9]*"
                                 />
                             </div>
                             <div>
@@ -149,6 +154,8 @@ const Signup = () => {
                                     onChange={handleOnchange}
                                 />
                             </div>
+                            <p style={{ color: "red", padding: "1px" }}>{error ? error : ""}</p>
+
 
                             <div className="mt-8 flex flex-col gap-y-4">
                                 <button
@@ -158,11 +165,7 @@ const Signup = () => {
                                 >
                                     Sign up
                                 </button>
-                                <div className=""
-                                    id='signInDiv'
-                                >
-                                    Sign up with Google
-                                </div>
+                            
                             </div>
                             <div className="mt-4 flex flex-col items-center">
                                 <div className="flex items-center">
@@ -184,3 +187,10 @@ const Signup = () => {
 };
 
 export default Signup;
+
+
+{/* <div className=""
+id='signInDiv'
+>
+Sign up with Google
+</div> */}

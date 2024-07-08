@@ -8,7 +8,6 @@ const baseUrl = "http://localhost:8000/api/v1";
 const createAxiosInstance = () => {
     const instance = axios.create({
         baseURL: baseUrl,
-        headers: { 'Content-Type': 'application/json' }
     });
 
     instance.interceptors.request.use(async req => {
@@ -34,6 +33,14 @@ const createAxiosInstance = () => {
                 }
             }
         }
+        if (req.data instanceof FormData) {
+            console.log("form-dataaaaaaaaaaaaaaaaaa")
+            req.headers['Content-Type'] = 'multipart/form-data';
+        } else {
+            req.headers['Content-Type'] = 'application/json';
+            console.log("jsonssssssssss")
+        }
+
         return req;
     }, error => {
         return Promise.reject(error);

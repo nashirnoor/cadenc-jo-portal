@@ -240,3 +240,7 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# DEFAULT_FROM_EMAIL = 'your_default_from_email@example.com'
+ADMIN_EMAIL = 'admin1234@gmail.com'  

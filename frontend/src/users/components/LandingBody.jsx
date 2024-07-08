@@ -1,6 +1,8 @@
 import React from 'react'
 import Card from 'react-bootstrap/Card';
 import { Link } from 'react-router-dom';
+import { Star, Briefcase, ClipboardCheck, User } from 'lucide-react';
+
 
 const LandingBody = () => {
   return (
@@ -106,8 +108,70 @@ const LandingBody = () => {
 
                 </div>
             </div>
+
+
+
+            <div className="container mx-auto px-4 py-12 max-w-6xl">
+      <div className="flex flex-col md:flex-row items-center justify-between">
+        <div className="md:w-1/2 mb-8 md:mb-0">
+          <div className="relative">
+            {/* <div className="absolute inset-0 bg-black rounded-tl-3xl rounded-br-3xl transform -rotate-6"></div> */}
+            <div className="relative z-10 bg-white p-6 rounded-tl-3xl rounded-br-3xl shadow-lg">
+              <img 
+                src={"/images/home_page_img.png"} 
+                alt="Smiling candidate" 
+                className="w-full h-auto rounded-tl-2xl rounded-br-2xl"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="md:w-1/2 md:pl-12">
+          <h2 className="text-4xl font-semibold mb-12">
+            Perfect for Candidates.<br/>
+            Beautiful for Employers.
+          </h2>
+          
+          <div className="grid grid-cols-2 gap-8">
+            <FeatureCard 
+              icon={<Star className="w-6 h-6 text-teal-black" />}
+              title="Profile Highlighters"
+              description="Get highlighted by the company that you've been worked"
+            />
+            <FeatureCard 
+              icon={<Briefcase className="w-6 h-6 text-teal-black" />}
+              title="Career Booster"
+              description="Boost your career journey faster than before"
+            />
+            <FeatureCard 
+              icon={<ClipboardCheck className="w-6 h-6 text-teal-black" />}
+              title="Interactive Assesment"
+              description="Work on the interactive assesment given from company"
+            />
+            <FeatureCard 
+              icon={<User className="w-6 h-6 text-teal-black" />}
+              title="Featured Profile"
+              description="Being featured makes your profile stands out from others"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
     </div>
   )
 }
 
 export default LandingBody
+
+
+
+const FeatureCard = ({ icon, title, description }) => (
+    <div className="flex flex-col items-center text-center">
+      <div className="bg-gray-100 p-3 rounded-full mb-2">
+        {icon}
+      </div>
+      <h3 className="font-semibold mb-1">{title}</h3>
+      <p className="text-sm text-gray-600">{description}</p>
+    </div>
+  );
+  

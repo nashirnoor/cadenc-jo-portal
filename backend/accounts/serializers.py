@@ -11,7 +11,7 @@ from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from .utils import send_normal_email
 from .utils import Google, register_social_user
-from .models import CompanyProfile
+from .models import CompanyProfile,Skill
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
@@ -24,10 +24,20 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'phone_number', 'password', 'password2', 'user_type']
 
     def validate(self, attrs):
+        email = attrs.get('email')
+        phone_number = attrs.get('phone_number')
+        
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "This email already exists"})
+        
+        if phone_number and User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError({"phone_number": "This phone number already exists"})
+        
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
         if password != password2:
-            raise serializers.ValidationError("Passwords do not match")
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        
         return attrs
 
     def create(self, validated_data):
@@ -62,11 +72,22 @@ class RecruiterRegisterSerializer(serializers.ModelSerializer):
         fields = ['email', 'first_name', 'phone_number', 'company_name', 'password', 'password2', 'user_type']
 
     def validate(self, attrs):
+        email = attrs.get('email')
+        phone_number = attrs.get('phone_number')
+        
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "This email already exists"})
+        
+        if phone_number and User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError({"phone_number": "This phone number already exists"})
+        
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
         if password != password2:
-            raise serializers.ValidationError("Passwords do not match")
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        
         return attrs
+
 
     def create(self, validated_data):
         recruiter = Recruiter.objects.create_user(
@@ -99,6 +120,10 @@ class LoginSerializer(serializers.ModelSerializer):
         user = authenticate(request, email=email, password=password)
         if not user:
             raise AuthenticationFailed("Invalid credentials, try again")
+        
+        if user.user_type == 'recruiter' and not user.is_approved:
+            raise AuthenticationFailed("Your account is not yet approved by the admin.")
+        
         if not user.is_verified:
             raise AuthenticationFailed("Email is not verified")
         user_tokens = user.tokens()
@@ -258,11 +283,24 @@ class RecruiterListSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CompanyProfile
-        fields = ["recruiter","company_name","company_location","company_strength","contact_number","email_address","company_logo"]
+        fields = ["id", "recruiter", "company_name", "company_location", "company_strength", "contact_number", "email_address", "company_logo"]
         read_only_fields = ['recruiter']
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            if attr == 'company_logo' and value is None:
+                # Don't update the logo if no new file is provided
+                continue
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = ['id', 'name']
 
 
 
@@ -306,17 +344,37 @@ class AdminLoginSerializer(serializers.ModelSerializer):
         }
 
 
-# serializers.py
-from rest_framework import serializers
+
 from .models import Job
 
+
+
 class JobSerializer(serializers.ModelSerializer):
-    
+    company_logo = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Job
         fields = [
             'id', 'recruiter', 'job_title', 'job_type', 'salary', 
-            'vacancies', 'experience','job_location', 'job_description', 'core_responsibilities', 
-            'created_at', 'updated_at'
+            'vacancies', 'experience', 'job_location', 'job_description', 
+            'core_responsibilities', 'created_at', 'updated_at', 'company_logo',
+            'company_name'  # Add this field
         ]
         read_only_fields = ['recruiter', 'created_at', 'updated_at']
+
+    def get_company_logo(self, obj):
+        try:
+            company_profile = CompanyProfile.objects.get(recruiter=obj.recruiter)
+            if company_profile.company_logo:
+                return self.context['request'].build_absolute_uri(company_profile.company_logo.url)
+        except CompanyProfile.DoesNotExist:
+            pass
+        return None
+
+    def get_company_name(self, obj):
+        try:
+            company_profile = CompanyProfile.objects.get(recruiter=obj.recruiter)
+            return company_profile.company_name
+        except CompanyProfile.DoesNotExist:
+            return None

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, GoogleOauthSignInview, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView
+from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, GoogleOauthSignInview, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView, PendingRecruitersView,check_company_profile,SkillListCreateAPIView,SkillDeleteAPIView
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from accounts import views
@@ -25,12 +25,21 @@ urlpatterns = [
     path('recruiters/', RecruiterListView.as_view(), name='recruiter-list'),
     path('jobs/', JobListView.as_view(), name='job-list'),
     path('jobs/create/', JobCreateView.as_view(), name='job-create'),
+    path('admin/recruiters/pending/', PendingRecruitersView.as_view(), name='pending_recruiters'),
+    path('admin/recruiters/pending/<int:recruiter_id>/', PendingRecruitersView.as_view(), name='approve_reject_recruiter'),
     # path('create-company-profile/', create_company_profile, name='create-company-profile'),
     path('company-profile/', create_company_profile, name='create_company_profile'),
     path('company-profile/update/<int:pk>/', update_company_profile, name='update_company_profile'),
     path('company-profile-get/', get_company_profile, name='get_company_profile'),
     path('jobs/create/', CreateJobView.as_view(), name='create-job'),
     path('api/jobs/', views.job_list, name='job-list'),
+    path('check-company-profile/', check_company_profile, name='check_company_profile'),
+    path('skills/', SkillListCreateAPIView.as_view(), name='skill-list-create'),
+    path('skills/<int:pk>/', SkillDeleteAPIView.as_view(), name='skill-delete'),
+    path('api/jobs/<int:pk>/', views.job_detail, name='job-detail'),
+    path('jobs/delete/<int:job_id>/', views.delete_job, name='delete_job'),
+
+  
 
 
 

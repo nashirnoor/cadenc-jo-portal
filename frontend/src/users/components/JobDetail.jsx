@@ -1,45 +1,54 @@
 import { useEffect, useState } from "react";
-// import { Linkedin } from "../assets";
 import moment from "moment";
 import { AiOutlineSafetyCertificate } from "react-icons/ai";
 import { useParams } from "react-router-dom";
 import { jobs } from "../../utils/data";
-// import { CustomButton J from "../components";
 import CustomButton from "./Custombutton";
 import JobCard from "./JobCard";
-import Header from "../../recruiter/RecruiterHeader";
+import axios from "axios";
+import Header from "./Header";
+
 const JobDetail = () => {
-  const params = useParams();
-  // const id = parseInt(params.id) - 1;
-  // const [job, setJob] = useState(jobs[0]);
+  const [job, setJob] = useState(null);
+  const [jobs, setJobs] = useState([]);
+
+  const { id } = useParams();
+  const defaultImage = "/images/company-image-default.png";
+  const companyLogo = job?.company_logo ? job.company_logo : defaultImage;
   const [selected, setSelected] = useState("0");
-  const { id } = useParams(); // Get job ID from URL params
-  const [job, setJob] = useState(null); // State to hold job details
-
-  useEffect(() => {
-    setJob(jobs[id ?? 0]);
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  }, [id]);
-
-
+  const [error, setError] = useState(null);
 
 
   useEffect(() => {
-    // Fetch job details based on ID from backend
-    const fetchJobDetail = async () => {
+    const fetchJobs = async () => {
       try {
-        const response = await axios.get(`your-backend-api-url/jobs/${id}`);
-        setJob(response.data); // Assuming response.data contains job details
-        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        const response = await axios.get('http://localhost:8000/api/v1/auth/api/jobs/');
+        console.log("API Response:", response.data);
+        setJobs(response.data.results);
+      } catch (err) {
+        setError('Failed to fetch jobs');
+        console.error(err);
+      }
+    };
+  
+    fetchJobs();
+  }, [ ]);
+
+
+  useEffect(() => {
+    const fetchJobDetails = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/v1/auth/api/jobs/${id}/`);
+        setJob(response.data);
       } catch (error) {
         console.error('Error fetching job details:', error);
       }
     };
 
-    fetchJobDetail(); // Call fetch function
+    fetchJobDetails();
   }, [id]);
 
-  if (!job) return null; 
+  if (!job) return <div>Loading...</div>;
 
   return (
     <>
@@ -51,20 +60,19 @@ const JobDetail = () => {
           <div className='w-full flex items-center justify-between'>
             <div className='w-3/4 flex gap-2'>
               <img
-                src={job?.company?.profileUrl}
+                src={companyLogo}
                 alt={job?.company?.name}
-                className='w-20 h-20 md:w-24 md:h-20 rounded'
+                className='w-20 h-20 md:w-20 md:h-20 rounded'
               />
 
               <div className='flex flex-col'>
                 <p className='text-xl font-semibold text-gray-600'>
-                  {job?.jobTitle}
+                  {job?.job_title}
                 </p>
-
-                <span className='text-base'>{job?.location}</span>
+                <span className='text-base'>{job?.job_location}</span>
 
                 <span className='text-base text-blue-600'>
-                  {job?.company?.name}
+                  {job?.company_name}
                 </span>
 
                 <span className='text-gray-500 text-sm'>
@@ -82,21 +90,21 @@ const JobDetail = () => {
             <div className='bg-[#bdf4c8] w-40 h-16 rounded-lg flex flex-col items-center justify-center'>
               <span className='text-sm'>Salary</span>
               <p className='text-lg font-semibold text-gray-700'>
-                $ {job?.salary}
+                Rs {job?.salary}
               </p>
             </div>
 
             <div className='bg-[#bae5f4] w-40 h-16 rounded-lg flex flex-col items-center justify-center'>
               <span className='text-sm'>Job Type</span>
               <p className='text-lg font-semibold text-gray-700'>
-                {job?.jobType}
+                {job?.job_type}
               </p>
             </div>
 
             <div className='bg-[#fed0ab] w-40 h-16 px-6 rounded-lg flex flex-col items-center justify-center'>
               <span className='text-sm'>No. of Applicants</span>
               <p className='text-lg font-semibold text-gray-700'>
-                {job?.applicants?.length}K
+                {job?.applicants?.length}1
               </p>
             </div>
 
@@ -135,16 +143,15 @@ const JobDetail = () => {
               <>
                 <p className='text-xl font-semibold'>Job Decsription</p>
 
-                <span className='text-base'>{job?.detail[0]?.desc}</span>
+                <span className='text-base'>{job.job_description}</span>
 
-                {job?.detail[0]?.requirement && (
                   <>
                     <p className='text-xl font-semibold mt-8'>Requirement</p>
                     <span className='text-base'>
-                      {job?.detail[0]?.requirement}
+                     {job.core_responsibilities}
                     </span>
                   </>
-                )}
+                
               </>
             ) : (
               <>
@@ -157,7 +164,7 @@ const JobDetail = () => {
                 </div>
 
                 <p className='text-xl font-semibold'>About Company</p>
-                <span>{job?.company?.about}</span>
+                <span>Microsoft Corporation and its contributors are available at http://www.microsoft.com and at http://www.microsoft.com for more information about the contributors and contributors to the Microsoft Corporation and its contributors to the Microsoft Corporation and its contributors to the Microsoft Corporation.Microsoft Corporation and its contributors are available at http://www.microsoft.com and at http://www.microsoft.com for more information about the contributors and contributors to the Microsoft Corporation.Microsoft Corporation and its contributors are available at http://www.microsoft.com and at http://www.microsoft.com for more information about the contributors and contributors to the Microsoft Corporation . </span>
               </>
             )}
           </div>
@@ -183,6 +190,7 @@ const JobDetail = () => {
       </div>
     </div>
     </>
+
   );
 };
 

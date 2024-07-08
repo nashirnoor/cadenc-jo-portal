@@ -6,11 +6,18 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from django.conf import settings
+
 # Create your models here.
 
 
 AUTH_PROVIDERS = {'email':'email', 'google':'google'}
 
+class Skill(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name=_("Skill Name"))
+
+    def __str__(self):
+        return self.name
 
 class User(AbstractBaseUser, PermissionsMixin):
     USER_TYPES = (
@@ -25,10 +32,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_approved = models.BooleanField(default=False)        
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
     auth_provider = models.CharField(max_length=50, default="email")
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='normal')
+    skills = models.ManyToManyField(Skill, related_name="users", blank=True, verbose_name=_("Skills"))
+
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name"]
@@ -59,12 +69,13 @@ class Recruiter(User):
     class Meta:
         verbose_name = _("Recruiter")
         verbose_name_plural = _("Recruiters")
-  
+
 
 class CompanyProfile(models.Model):
     recruiter = models.OneToOneField(Recruiter, on_delete=models.CASCADE, related_name='company_profile')
 
     company_name = models.CharField(max_length=255, verbose_name=_("Company Name"))
+    about = models.CharField(max_length=1000, verbose_name=_("About"), blank=True)
     company_location = models.CharField(max_length=255, verbose_name=_("Company Location"))
     company_strength = models.CharField(max_length=255, verbose_name=_("Company Strength"))
     contact_number = models.CharField(max_length=15, verbose_name=_("Contact Number"))
@@ -118,5 +129,58 @@ class Job(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
 
+    class Meta:
+        unique_together = ['recruiter', 'job_title']
+
     def __str__(self):
         return self.job_title
+    
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True, verbose_name=_("Profile Photo"))
+    skills = models.ManyToManyField('Skill', related_name='user_profiles', blank=True, verbose_name=_("Skills"))
+    resume = models.FileField(upload_to='resumes/', null=True, blank=True, verbose_name=_("Resume"))
+
+    def __str__(self):
+        return f"Profile of {self.user.email}"
+
+class Education(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='educations')
+    university = models.CharField(max_length=255, verbose_name=_("University"))
+    degree = models.CharField(max_length=100, verbose_name=_("Degree"))
+    field_of_study = models.CharField(max_length=100, verbose_name=_("Field of Study"))
+    start_date = models.DateField(verbose_name=_("Start Date"))
+    end_date = models.DateField(verbose_name=_("End Date"), null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.degree} in {self.field_of_study} at {self.university} ({self.user_profile.user.email})"
+
+class Experience(models.Model):
+    EMPLOYMENT_TYPES = (
+        ('full_time', 'Full Time'),
+        ('part_time', 'Part Time'),
+        ('self_employed', 'Self-Employed'),
+        ('freelance', 'Freelance'),
+        ('internship', 'Internship'),
+        ('trainee', 'Trainee'),
+    )
+    
+    LOCATION_TYPES = (
+        ('on_site', 'On-Site'),
+        ('remote', 'Remote'),
+        ('hybrid', 'Hybrid'),
+    )
+    
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='user_experiences')
+    title = models.CharField(max_length=100, verbose_name=_("Title"))
+    employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPES, verbose_name=_("Employment Type"))
+    location_type = models.CharField(max_length=10, choices=LOCATION_TYPES, verbose_name=_("Location Type"))
+    start_date = models.DateField(verbose_name=_("Start Date"))
+    end_date = models.DateField(verbose_name=_("End Date"), null=True, blank=True)
+    skills = models.ManyToManyField('Skill', related_name='experiences', verbose_name=_("Skills"))
+    role = models.CharField(max_length=100, verbose_name=_("Role"))
+
+    def __str__(self):
+        return f"{self.title} at {self.user_profile.user.email}"
