@@ -19,10 +19,11 @@ const CompanyForm = () => {
                 }
             }
     
-            const token = JSON.parse(localStorage.getItem('access'));
+            const jwt_access = JSON.parse(localStorage.getItem('access'));
+            console.log(jwt_access)
             const response = await axios.post('http://localhost:8000/api/v1/auth/company-profile/', formData, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${jwt_access}`,
                     'Content-Type': 'multipart/form-data'
                 }
             });
@@ -124,6 +125,17 @@ const CompanyForm = () => {
                         }
                     })}
                     error={errors.company_strength ? errors.company_strength.message : ""}
+                />
+                 <TextInput
+                    name='about'
+                    label='About company'
+                    placeholder='About company'
+                    type='text'
+                    register={register("about", { 
+                        required: "Company about section is required!",
+                       
+                    })}
+                    error={errors.about ? errors.about.message : ""}
                 />
                 <div className='w-full mt-2'>
                     <label className='text-gray-600 text-sm mb-1'>Company Profile Photo</label>

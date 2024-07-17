@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom'; 
 import axios from 'axios';
 import {useNavigate} from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 
 const Signup = () => {
@@ -16,22 +16,7 @@ const Signup = () => {
         password2: ""
     });
 
-    const handleSignInWithGoogle = async (response) => {
-        const payload = response.credential;
-        const server_res = await axios.post("http://localhost:8000/api/v1/auth/google/", { 'access_token': payload });
-        console.log(server_res, 'server');
-        const user = {
-            "email": server_res.data.email,
-            "names": server_res.data.full_name
-        };
-        if (server_res.status === 200) {
-            console.table(server_res.data);
-            localStorage.setItem("user", JSON.stringify(user));
-            localStorage.setItem("user_token", JSON.stringify(server_res.data.tokens));
-            navigate("/landing");
-            toast.success("Login successful");
-        }
-    };
+  
 
     const handleOnchange = (e) => {
         setFormdata({ ...formdata, [e.target.name]: e.target.value });
@@ -39,8 +24,8 @@ const Signup = () => {
 
     useEffect(() => {
         google.accounts.id.initialize({
-            client_id: import.meta.env.VITE_CLIENT_ID,
-            callback: handleSignInWithGoogle
+            client_id:import.meta.env.VITE_CLIENT_ID,
+            callback: handleSignInWithGoogle,
         });
         google.accounts.id.renderButton(
             document.getElementById("signInDiv"),
@@ -86,6 +71,22 @@ const Signup = () => {
         } catch (error) {
             setError(error.response.data.email || error.response.data.phone_number || 'An error occurred');
           }
+    };
+    const handleSignInWithGoogle = async (response) => {
+        const payload = response.credential;
+        const server_res = await axios.post("http://localhost:8000/google/", { 'access_token': payload });
+        console.log(server_res.data, 'server');
+        const user = {
+            "email": server_res.data.email,
+            "names": server_res.data.full_name
+        };
+        if (server_res.status === 200) {
+            console.table(server_res.data);
+            localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("user_token", JSON.stringify(server_res.data.tokens));
+            navigate("/landing");
+            toast.success("Login successful");
+        }
     };
 
     const { email, first_name, phone_number, password, password2 } = formdata;
@@ -167,12 +168,22 @@ const Signup = () => {
                                 </button>
                             
                             </div>
-                            <div className="mt-4 flex flex-col items-center">
+                            <div className="googleContainer"
+                                    id='signInDiv'
+                                    >
+                                        <button>
+                                    Sign up with Google
+                                    </button>
+                                    </div>
+
+                                <div className="mt-4 flex flex-col items-center">
                                 <div className="flex items-center">
                                     <p className="font-medium text-base">Have an account?</p>
                                     <div className="text-violet-500 text-base font-medium ml-2">
                                         <Link to="/login">Sign in</Link>
                                     </div>
+                                    
+                          
                                 </div>
                                 <div className="text-violet-500 text-base font-medium ml-2 mt-2">
                                     <Link to="/recruiter-register">Register as Recruiter</Link>
@@ -189,8 +200,3 @@ const Signup = () => {
 export default Signup;
 
 
-{/* <div className=""
-id='signInDiv'
->
-Sign up with Google
-</div> */}

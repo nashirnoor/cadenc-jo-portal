@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, json, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 //////////////////
 const Login = () => {
     const navigate = useNavigate();
@@ -38,6 +38,7 @@ const Login = () => {
                 };
                 if (res.status === 200) {
                     localStorage.setItem("user", JSON.stringify(user));
+
                     localStorage.setItem("access", JSON.stringify(response.access_token));
                     localStorage.setItem("refresh", JSON.stringify(response.refresh_token));
                     if (response.user_type === "recruiter") {
@@ -57,7 +58,27 @@ const Login = () => {
                             navigate("/recruiter-home");
                         }
                     } else {
-                        navigate("/landing");
+                        try {
+                            const jwt_access = JSON.parse(localStorage.getItem('access'));
+                            const userProfileRes = await axios.get('http://localhost:8000/api/v1/auth/check-user-profile/', {
+                                headers: {
+                                    'Authorization': `Bearer ${jwt_access}`
+                                }
+                            });
+                            
+                            if (userProfileRes.status === 204) {
+                                // No profile exists, redirect to profile form
+                                console.log("To user profile form")
+                                navigate("/user-detail-form");
+                            } else {
+                                // Profile exists, proceed to landing page
+                                navigate("/landing");
+                            }
+                        } catch (profileError) {
+                            console.error('Error checking user profile:', profileError);
+                            // If there's an error, we'll assume no profile and redirect to the form
+                            navigate("/user-detail-form");
+                        }
                     }
 
                     toast.success("Login successful");

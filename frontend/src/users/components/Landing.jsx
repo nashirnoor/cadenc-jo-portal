@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import Header from './Header';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import Footer from './Footer';
 import LandingBody from './LandingBody';
 

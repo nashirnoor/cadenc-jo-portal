@@ -6,19 +6,41 @@ import CustomButton from "./Custombutton";
 import ListBox from "./ListBox";
 import SearchHeader from "./SearchHeader";
 import Header from "../../recruiter/RecruiterHeader";
+import axios from "axios";
 
 const Companies = () => {
   const [page, setPage] = useState(1);
   const [numPage, setNumPage] = useState(1);
-  const [recordsCount, setRecordsCount] = useState(0);
-  const [data, setData] = useState(companies ?? []);
   const [searchQuery, setSearchQuery] = useState("");
   const [cmpLocation, setCmpLocation] = useState("");
   const [sort, setSort] = useState("Newest");
   const [isFetching, setIsFetching] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(companies ?? []);
+  const [error, setError] = useState(null);
 
-  const location = useLocation();
-  const navigate = useNavigate();
+
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/v1/auth/companies/');
+        setCompanies(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error details:', err);
+        setError(err.response?.data?.message || err.message || 'An unknown error occurred');
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+
 
   const handleSearchSubmit = () => {};
   const handleShowMore = () => {};
@@ -50,9 +72,9 @@ const Companies = () => {
         </div>
 
         <div className='w-full flex flex-col gap-6'>
-          {data?.map((cmp, index) => (
-            <CompanyCard cmp={cmp} key={index} />
-          ))}
+        {companies.map((company) => (
+        <CompanyCard key={company.id} company={company} />
+      ))}
 
           {isFetching && (
             <div className='mt-10'>
@@ -61,7 +83,7 @@ const Companies = () => {
           )}
 
           <p className='text-sm text-right'>
-            {data?.length} records out of {recordsCount}
+            {data?.length} records out of records count
           </p>
         </div>
 

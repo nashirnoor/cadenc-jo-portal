@@ -8,52 +8,44 @@ const JobCard = ({ job }) => {
   const companyLogo = job?.company_logo ? job.company_logo : defaultImage;
 
   const truncateText = (text, length) => {
-    if (!text) return ''; // Handle cases where text is undefined or null
+    if (!text) return '';
     return text.length > length ? text.substring(0, length) + "..." : text;
   };
 
   return (
-    <Link to={`/job/${job.id}`}>     
-     <div className='w-full md:w-[16rem] 2xl:w-[18rem] h-[16rem] md:h-[18rem] bg-white flex flex-col justify-between shadow-lg rounded-md px-3 py-5'>
-      <div className='flex gap-3'>
-        <div className='company-logo'>
-          <img src={companyLogo} alt="Company Logo" className='w-14 h-14 object-cover rounded-full' />
+    <Link to={`/job/${job.id}`} className="block">
+      <div className='w-72 h-72 bg-white shadow-lg rounded-md p-4 flex flex-col overflow-hidden'>
+        <div className='flex gap-3 mb-3'>
+          <div className='company-logo flex-shrink-0'>
+            <img src={companyLogo} alt="Company Logo" className='w-12 h-12 object-cover rounded-full' />
+          </div>
+          <div className='overflow-hidden'>
+            <h1 className='text-sm font-medium truncate'>{truncateText(job.company_name, 20)}</h1>
+            <p className='text-base font-semibold truncate'>{truncateText(job.job_title, 25)}</p>
+            <span className='flex gap-1 items-center text-xs'>
+              <GoLocation className='text-slate-900 flex-shrink-0' />
+              <span className='truncate'>{truncateText(job.job_location, 20)}</span>
+            </span>
+          </div>
         </div>
-        {/* <div>
-          <p className='text-lg font-semibold truncate'></p>
-          <span className='flex gap-2 items-center'>
-            {job.company_name}
-          </span>
-        </div> */}
-        <div>
-         <h1>{job.company_name}</h1> 
-          <p className='text-lg font-semibold truncate'>{truncateText(job.job_title, 15)}</p>
-          <span className='flex gap-2 items-center'>
-            <GoLocation className='text-slate-900 text-sm' />
-            {job.job_location}<br/> 
-          </span>
 
-        </div>
-      </div>
-
-      <div className="py-3">
-        <p className="text-sm">
+        <div className="flex-grow overflow-hidden mb-3">
+          <p className="text-sm line-clamp-6">
           {job.job_description}
-        </p>
+          </p>
+        </div>
+
+        <div className='flex items-center justify-between text-xs'>
+          <p className='bg-[#1d4fd826] text-[#1d4fd8] py-0.5 px-1.5 rounded font-semibold'>
+            {truncateText(job.job_type, 15)}
+          </p>
+          <span className='text-gray-500'>
+            {moment(job.created_at).fromNow()}
+          </span>
+        </div>
       </div>
-      <div className='flex items-center justify-between'>
-        <p className='bg-[#1d4fd826] text-[#1d4fd8] py-0.5 px-1.5 rounded font-semibold text-sm'>
-          {job.job_type}
-        </p>
-        <span className='text-gray-500 text-sm'>
-          {moment(job.created_at).fromNow()}
-        </span>
-      </div>
-    </div>
     </Link>
   );
 };
-
-
 
 export default JobCard;

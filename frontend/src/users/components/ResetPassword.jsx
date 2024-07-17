@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 const ResetPassword = () => {
   const navigate = useNavigate();

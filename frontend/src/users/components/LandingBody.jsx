@@ -10,7 +10,7 @@ const LandingBody = () => {
         <div className='flex flex-col md:flex-row px-4 lg:px-28 mt-9'>
                 <div className='w-full md:w-1/2 my-auto px-4 lg:px-20 text-left'>
                     <h1 className=' font-semibold text-4xl md:text-7xl leading-tight  -mt-16 pt-6 md:pt-0'>One Step Closer To Your New Job</h1>
-                    <p className='text-slate-500 mt-3'>Explore thousands of jpb opprtunities with all kahfowlie ushdfoilwehsodlf ihweiorilsdhfwoel    c8jwe;od  wsdwesdi  8eud fjpwo; hsxgunv erhfglviedfhg eiufhgweiru</p>
+                    <p className='text-slate-500 mt-3'>Welcome to our Job Portal, where talent meets opportunities. Find your dream job with ease. Employers, connect with qualified candidates. Start your journey today!</p>
                     <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 mt-3 px-4 border border-blue-700 rounded">
                         <Link to='/'>Join Now</Link>
                     </button>

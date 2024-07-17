@@ -11,3 +11,21 @@
     overflow: hidden;
   }
   
+
+/* Add this CSS to your global stylesheet or your component's CSS module */
+.sidebar::-webkit-scrollbar {
+  width: 4px; /* Width of the scrollbar */
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #2d2d2d; /* Track color */
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: #888; /* Scrollbar thumb color */
+  border-radius: 10px; /* Rounded corners for the scrollbar thumb */
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Hover color for the scrollbar thumb */
+}

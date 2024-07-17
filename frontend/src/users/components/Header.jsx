@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { Menu, X, User, Settings, LogOut } from 'lucide-react';
 
 const CustomButton = styled(Button)({
@@ -77,6 +77,7 @@ const Header = () => {
         <Link to="/about" className="font-bold hover:text-blue-500">About</Link>
         <Link to="/user-profile" className="font-bold hover:text-blue-500">Profile</Link>
         <Link to="/company-list" className="font-bold hover:text-blue-500">Companies</Link>
+        <Link to="/chat" className="font-bold hover:text-blue-500">Message</Link>
         <Link to="/find-jobs" className="font-bold hover:text-blue-500">Find Job</Link>
       </div>
 

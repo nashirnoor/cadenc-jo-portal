@@ -84,6 +84,9 @@ class CompanyProfile(models.Model):
 
     def __str__(self):
         return self.company_name
+    
+    def job_count(self):
+        return Job.objects.filter(recruiter=self.recruiter, deleted=False).count()
 
     class Meta:
         verbose_name = _("Company Profile")
@@ -117,6 +120,12 @@ class Job(models.Model):
         ('intern', 'Intern'),
     )
 
+    JOB_LOCATION_TYPES = (
+        ('on_site', 'On-site'),
+        ('hybrid', 'Hybrid'),
+        ('remote', 'Remote'),
+    )
+
     recruiter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='job_posts')
     job_title = models.CharField(max_length=255, verbose_name=_("Job Title"))
     job_type = models.CharField(max_length=20, choices=JOB_TYPES, verbose_name=_("Job Type"))
@@ -128,6 +137,12 @@ class Job(models.Model):
     core_responsibilities = models.TextField(verbose_name=_("Core Responsibilities"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+    applications = models.JSONField(default=list)
+    deleted = models.BooleanField(default=False, verbose_name=_("Deleted"))  # New field
+    skills = models.ManyToManyField('Skill', related_name='user_jobs', blank=True, verbose_name=_("Skills"))
+    job_location_type = models.CharField(max_length=20, choices=JOB_LOCATION_TYPES, default='on_site', verbose_name=_("Job Location Type"))
+
+
 
     class Meta:
         unique_together = ['recruiter', 'job_title']
@@ -139,9 +154,11 @@ class Job(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    position = models.CharField(max_length=255, verbose_name=_("Position"), blank=True)
     photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True, verbose_name=_("Profile Photo"))
     skills = models.ManyToManyField('Skill', related_name='user_profiles', blank=True, verbose_name=_("Skills"))
     resume = models.FileField(upload_to='resumes/', null=True, blank=True, verbose_name=_("Resume"))
+    about = models.CharField(max_length=800,verbose_name=_("about_user"), blank=True)
 
     def __str__(self):
         return f"Profile of {self.user.email}"
@@ -179,7 +196,7 @@ class Experience(models.Model):
     location_type = models.CharField(max_length=10, choices=LOCATION_TYPES, verbose_name=_("Location Type"))
     start_date = models.DateField(verbose_name=_("Start Date"))
     end_date = models.DateField(verbose_name=_("End Date"), null=True, blank=True)
-    skills = models.ManyToManyField('Skill', related_name='experiences', verbose_name=_("Skills"))
+    # skills = models.ManyToManyField('Skill', related_name='experiences', verbose_name=_("Skills"))
     role = models.CharField(max_length=100, verbose_name=_("Role"))
 
     def __str__(self):

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';  
 import { NavLink } from 'react-router-dom';

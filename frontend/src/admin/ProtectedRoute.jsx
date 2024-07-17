@@ -9,7 +9,7 @@ const ProtectedRoute = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-        console.log("ajsdfhklasdfkjafdhlakjfha")
+        console.log("--------------------------")
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
         setLoading(false);

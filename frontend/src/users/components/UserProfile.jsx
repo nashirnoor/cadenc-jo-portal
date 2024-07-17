@@ -1,9 +1,150 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
+import axios from 'axios';
+import { Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 const UserProfile = () => {
+  const [profileData, setProfileData] = useState({
+    photo: null,
+    skills: [],
+    resume: null,
+    fullName: '',
+    email: '',
+    // Add other profile fields as needed
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [about, setAbout] = useState("Your initial about text here");
+  const navigate = useNavigate();
+  const [educations, setEducations] = useState([]);
+
+
+  const [experiences, setExperiences] = useState([]);
+
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        const jwt_access = JSON.parse(localStorage.getItem('access'));
+        const response = await axios.get('http://localhost:8000/api/v1/auth/experience/', {
+          headers: {
+            'Authorization': `Bearer ${jwt_access}`
+          }
+        }); // Adjust the endpoint accordingly
+        console.log(response.data)
+        setExperiences(response.data);
+      } catch (error) {
+        console.error('Error fetching experiences:', error);
+      }
+    };
+
+    fetchExperiences();
+  }, []);
+
+  useEffect(() => {
+    const fetchEducationData = async () => {
+      try {
+        const jwt_access = JSON.parse(localStorage.getItem('access'));
+
+        const response = await axios.get('http://localhost:8000/api/v1/auth/education/', {
+          headers: {
+            'Authorization': `Bearer ${jwt_access}`
+          }
+        });
+        setEducations(response.data);
+      } catch (error) {
+        console.error('There was an error fetching the education data!', error);
+      }
+    };
+
+    fetchEducationData();
+  }, []);
+
+
+  useEffect(() => {
+    checkprofile();
+    fetchProfileData();
+  }, []);
+
+ 
+
+  const fetchProfileData = async () => {
+    try {
+      const jwt_access = JSON.parse(localStorage.getItem('access'));
+      const response = await axios.get('http://localhost:8000/api/v1/auth/user-profile/', {
+        headers: {
+          'Authorization': `Bearer ${jwt_access}`
+        }
+      });
+      console.log(response.data)
+      setProfileData(response.data);
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+    }
+  };
+
+  const checkprofile = () =>{
+    try {
+      const jwt_access = JSON.parse(localStorage.getItem('access'));
+      const userProfileRes = axios.get('http://localhost:8000/api/v1/auth/check-user-profile/', {
+          headers: {
+              'Authorization': `Bearer ${jwt_access}`
+          }
+      });
+      
+      if (userProfileRes.status === 204) {
+          // No profile exists, redirect to profile form
+          console.log("To user profile form")
+          navigate("/user-detail-form");
+      } else {
+          // Profile exists, proceed to landing page
+          console.log(userProfileRes.status)
+          navigate("/user-profile");
+      }
+  } catch (profileError) {
+      console.error('Error checking user profile:', profileError);
+      // If there's an error, we'll assume no profile and redirect to the form
+      navigate("/user-detail-form");
+  }
+  }
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      const jwt_access = JSON.parse(localStorage.getItem('access'));
+
+      const response = await fetch('http://localhost:8000/api/v1/auth/update-profile/', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include your authentication token here
+          'Authorization': `Bearer ${jwt_access}`
+        },
+        body: JSON.stringify({ about })
+      });
+
+      if (response.ok) {
+        setIsEditing(false);
+        // Optionally, you can update the about text with the response from the server
+      } else {
+        console.error('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+
+
+
   return (
+
+
+
     <>
       <Header />
       <div className="bg-gray-100 flex items-start justify-center p-4">
@@ -11,18 +152,24 @@ const UserProfile = () => {
           {/* Left side - Profile Photo */}
           <div className="w-full sm:w-[271px] h-[271px] bg-gray-200 flex-shrink-0 flex items-center justify-center p-4">
             <div className="w-48 h-48 rounded-full border-4 border-indigo-500 overflow-hidden">
-              <img
-                src="/path-to-your-image.jpg"
-                alt="Profile Photo"
-                className="w-full h-full object-cover"
-              />
+              {profileData.photo ? (
+                <img
+                  src={profileData.photo}
+                  alt="Profile Photo"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">
+                  No Photo
+                </div>
+              )}
             </div>
           </div>
 
           {/* Middle section - Name, Position, Education, Contact Info */}
           <div className="flex-grow p-6 sm:p-8 flex flex-col justify-center">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">John Doe</h2>
-            <p className="text-xl text-indigo-600 mb-4">Senior Software Engineer</p>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">{profileData.full_name}</h2>
+            <p className="text-xl text-indigo-600 mb-4">{profileData.position}</p>
             <div className="space-y-2">
               <div className="flex items-center">
                 <svg className="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -40,7 +187,7 @@ const UserProfile = () => {
                 <svg className="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                <span className="text-gray-700">+1 (123) 456-7890</span>
+                <span className="text-gray-700">+1 (123) 456-789</span>
               </div>
               <div className="flex items-center">
                 <svg className="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -62,16 +209,17 @@ const UserProfile = () => {
           <div className="w-full sm:w-[300px] bg-gray-50 p-6 sm:p-8 flex flex-col justify-center">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Skills</h3>
             <div className="flex flex-wrap gap-2">
-              {['React', 'Node.js', 'Python', 'JavaScript', 'SQL', 'Git'].map((skill) => (
+              {profileData.skills.map((skill) => (
                 <span
-                  key={skill}
+                  key={skill.id}
                   className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium"
                 >
-                  {skill}
+                  {skill.name}
                 </span>
               ))}
             </div>
           </div>
+
         </div>
       </div>
 
@@ -79,79 +227,61 @@ const UserProfile = () => {
       <div className="bg-gray-100 flex items-start justify-center p-4">
         <div className="w-full max-w-[1120px] bg-white rounded-xl shadow-lg p-8 relative">
           <div className="absolute top-4 right-4">
-            <button className="text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
+            {isEditing ? (
+              <button onClick={handleSave} className="text-blue-500 hover:text-blue-700">
+                Save
+              </button>
+            ) : (
+              <button onClick={handleEdit} className="text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            )}
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">About</h2>
-          <p className="text-gray-600">
-            Experienced software engineer with a passion for creating efficient and scalable web applications.
-            Skilled in full-stack development with a focus on React and Node.js. Always eager to learn new technologies
-            and contribute to innovative projects.
-          </p>
+          {isEditing ? (
+            <textarea
+              value={about}
+              onChange={(e) => setAbout(e.target.value)}
+              className="w-full h-32 p-2 border rounded"
+            />
+          ) : (
+            <p className="text-gray-600">{about}</p>
+          )}
         </div>
       </div>
       {/* Experience Section */}
+     
       <div className="bg-gray-100 flex items-start justify-center p-4">
   <div className="w-full max-w-[1120px] bg-white rounded-xl shadow-lg p-8 relative">
-  <div className="absolute top-4 right-4">
-  <button 
-    className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 flex items-center justify-center transition duration-300 ease-in-out shadow-md" 
-    title="Add Experience"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-    </svg>
-  </button>
-</div>
+    <div className="absolute top-4 right-4 flex space-x-2">
+      <button
+        className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 flex items-center justify-center transition duration-300 ease-in-out shadow-md"
+        title="Add Experience"
+      >
+        {/* SVG Icon for Add Experience */}
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+      </button>
+    </div>
 
     <h2 className="text-2xl font-bold text-gray-800 mb-6">Experience</h2>
     <div className="space-y-8">
-      {[
-        {
-          company: 'Tech Solutions Inc.',
-          position: 'Senior Software Engineer',
-          startDate: 'Jan 2020',
-          endDate: 'Present',
-          location: 'San Francisco, CA',
-          jobType: 'Full-time',
-          responsibilities: [
-            'Led the development team in creating a scalable e-commerce platform using React and Node.js.',
-            'Implemented CI/CD pipelines to streamline the deployment process and reduce downtime.',
-            'Mentored junior developers and conducted code reviews to ensure code quality.',
-          ],
-        },
-        {
-          company: 'Web Innovators',
-          position: 'Software Developer',
-          startDate: 'Jun 2016',
-          endDate: 'Dec 2019',
-          location: 'San Francisco, CA',
-          jobType: 'Full-time',
-          responsibilities: [
-            'Developed and maintained web applications using JavaScript, HTML, and CSS.',
-            'Collaborated with cross-functional teams to design and implement new features.',
-            'Participated in daily stand-ups and sprint planning meetings to ensure timely project delivery.',
-          ],
-        },
-      ].map((experience, index) => (
+      {experiences.map((experience, index) => (
         <div key={index} className="space-y-2 relative bg-gray-50 p-6 rounded-lg border border-gray-200">
           <div className="absolute top-4 right-4">
             <button className="bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800 rounded-full p-2 transition duration-300 ease-in-out" title="Edit Experience">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
+              {/* SVG Icon */}
             </button>
           </div>
-          <h3 className="text-xl font-semibold text-gray-800">{experience.position}</h3>
-          <p className="text-gray-600">{experience.company} | {experience.startDate} - {experience.endDate}</p>
-          <p className="text-gray-600">{experience.location} | {experience.jobType}</p>
+          <h3 className="text-xl font-semibold text-gray-800">{experience.title}</h3>
+          <p className="text-gray-600">{experience.user_profile.company} | {experience.start_date} - {experience.end_date || 'Present'}</p>
+          <p className="text-gray-600">{experience.location_type} | {experience.employment_type}</p>
+          <p className="text-gray-600">{experience.role}</p>
           <ul className="list-disc list-inside text-gray-600 mt-2">
-            {experience.responsibilities.map((responsibility, idx) => (
-              <li key={idx} className="mt-1">{responsibility}</li>
-            ))}
+            {/* Map through responsibilities if needed */}
           </ul>
         </div>
       ))}
@@ -161,34 +291,19 @@ const UserProfile = () => {
 
       {/* Education Section */}
       <div className="bg-gray-100 flex items-start justify-center p-4">
-        <div className="w-full max-w-[1120px] bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Education</h2>
-          <div className="space-y-8">
-            {[
-              {
-                school: 'XYZ University',
-                degree: 'B.S. in Computer Science',
-                startDate: 'Sep 2012',
-                endDate: 'May 2016',
-                location: 'San Francisco, CA',
-              },
-              {
-                school: 'ABC College',
-                degree: 'A.A. in Information Technology',
-                startDate: 'Sep 2010',
-                endDate: 'May 2012',
-                location: 'San Francisco, CA',
-              },
-            ].map((education, index) => (
-              <div key={index} className="space-y-2">
-                <h3 className="text-xl font-semibold text-gray-800">{education.degree}</h3>
-                <p className="text-gray-600">{education.school} | {education.startDate} - {education.endDate}</p>
-                <p className="text-gray-600">{education.location}</p>
-              </div>
-            ))}
-          </div>
+      <div className="w-full max-w-[1120px] bg-white rounded-xl shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Education</h2>
+        <div className="space-y-8">
+          {educations.map((education, index) => (
+            <div key={index} className="space-y-2">
+              <h3 className="text-xl font-semibold text-gray-800">{education.degree}</h3>
+              <p className="text-gray-600">{education.university} | {new Date(education.start_date).toLocaleString('default', { month: 'short' })} {new Date(education.start_date).getFullYear()} - {education.end_date ? `${new Date(education.end_date).toLocaleString('default', { month: 'short' })} ${new Date(education.end_date).getFullYear()}` : 'Present'}</p>
+              <p className="text-gray-600">{education.field_of_study}</p>
+            </div>
+          ))}
         </div>
       </div>
+    </div>
       <Footer />
     </>
   );

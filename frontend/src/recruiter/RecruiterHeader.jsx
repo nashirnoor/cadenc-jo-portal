@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import axiosInstance from '../users/utils/axiosInstance';
 import axios from 'axios';
 import { HiMenu, HiX } from 'react-icons/hi';
@@ -111,13 +111,19 @@ const Header = () => {
         <nav className="px-4 lg:px-28">
         <div className="flex justify-between items-center h-24">
           <h1 className="font-semibold text-4xl">
-            <Link to="/recruiter-home">Cadenc</Link>
+            <Link to="/recruiter-home"><img src={"/images/official_logo.png"}className="h-16" alt="Cadenc"/>
+</Link>
           </h1>
           
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/about-recruiter" className="font-bold">About</Link>
             <Link to="/upload-job" className="font-bold">Post Job</Link>
-            <Link to="/company-list" className="font-bold">Company List</Link>
+            {/* <Link to="/company-list" className="font-bold">Company List</Link> */}
+            <Link to="/company-profile" className="font-bold">Profile</Link>
+            <Link to="/job-posted" className="font-bold">Job posted</Link>
+            <Link to="/chat" className="font-bold">Message</Link>
+
+
           </div>
           
           <div className="hidden md:flex items-center">
@@ -160,6 +166,8 @@ const Header = () => {
               <Link to="/about-recruiter" className="block px-3 py-2 rounded-md text-base font-medium">About</Link>
               <Link to="/upload-job" className="block px-3 py-2 rounded-md text-base font-medium">Post Job</Link>
               <Link to="/company-list" className="block px-3 py-2 rounded-md text-base font-medium">Company List</Link>
+              <Link to="/job-posted" className="block px-3 py-2 rounded-md text-base font-medium">Job posted</Link>
+
               {!jwt_access && !user && (
                 <>
                   <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium">Login</Link>

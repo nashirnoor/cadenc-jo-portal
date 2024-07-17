@@ -59,7 +59,7 @@ const JobCardRecuiter = ({ job,onDelete }) => {
         </div>
 
         <div className="py-3">
-          <p className="text-sm">
+          <p className="text-sm line-clamp-6">
             {job.job_description}
           </p>
         </div>

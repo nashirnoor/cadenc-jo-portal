@@ -26,14 +26,26 @@ import ProtectedRouteRecruiter from './recruiter/components/ProtectedRouteRecrui
 import AdminRecruiterApproval from './admin/components/AdminRecruiterApproval';
 import CompanyForm from './recruiter/CompanyForm';
 import SkillManagement from './admin/components/SkillManagement';
-import UserDetailForm from './recruiter/components/UserDetailForm';
 import UserProfile from './users/components/UserProfile';
-function App() {
+import UserDetailForm from './users/components/UserForm/UserDetailForm';
+import ExperienceForm from './users/components/UserForm/ExperienceForm';
+import EducationForm from './users/components/UserForm/EducationForm';
+import JobPosted from './recruiter/JobPosted';
+import Applicants from './recruiter/Applicants';
+import ChatPage from './users/components/Chat/ChatPage';
+import CompanyProfileUser from './users/components/CompanyProfileUser';
+// import PageChat from './users/components/Chat/PageChat';
+// import ChatPage from './users/components/chats/ChatPage';
+// import Chat from './users/components/Chat/Chat';
+// import ChatList from './users/components/Chat/ChatList';
 
+function App() {
+  
   return (
     <>
     <Router>
       <Routes>
+      
         {/* <Route path='/' element={<Signup/>} /> */}
         {/* <Route path='/login' element={<Login/>} /> */}
         <Route path="/login" element={
@@ -68,25 +80,48 @@ function App() {
           <Route path='/recruiter-list' element={<RecruiterList/>}/>
           <Route path='/recruiter-approval' element={<AdminRecruiterApproval/>} />
           <Route path='/skill-management' element={<SkillManagement/>} />
-
-
         </Route>
 
         <Route path='/recruiter-home' element={<RecruiterHome/>} />
-        {/* <Route path='/job-detail' element={<JobDetail/>} /> */}
-        {/* <Route path='/job-detail' element={<JobDetail />} /> */}
         <Route path='/company-form' element={<CompanyForm/>} />
 
         <Route path='/company-list' element={<Companies/>} />
         <Route path='/company-profile' element={<CompanyProfile/>} />
         <Route path='/upload-job' element={<UploadJob/>} />
         <Route path='/about-recruiter' element={<About_recruiter/>} />
+
         <Route path='/user-detail-form' element={<UserDetailForm />} />
+        
         <Route path='/user-profile' element={<UserProfile/>} />
 
         <Route path="/job/:id" element={<JobDetail/>} />
+        <Route path="/experience" element={<ExperienceForm/>} />
+        <Route path="/education" element={<EducationForm/>} />
 
-      
+        <Route path='/job-posted' element={<JobPosted/>} />
+        {/* <Route path='/applicants' element={<Applicants/>} /> */}
+        <Route path='/applicants/:jobId' element={<Applicants />} />
+        {/* <Route path='/user-chat/:id' element={<PageChat />} /> */}
+
+        {/* <Route path="/chat/:id" element={<ChatPage />} /> */}
+
+        {/* <Route exact path="/chat">
+          <ChatList userId={userId} accessToken={accessToken} />
+        </Route>
+        <Route path="/chat/:chatWithId">
+          {({ match }) => (
+            <Chat
+              userId={userId}
+              chatWithId={match.params.chatWithId}
+              accessToken={accessToken}
+            />
+          )}
+        </Route> */}
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/company-profile-user/:id" element={<CompanyProfileUser />} />
+
+
+
 
        
       </Routes>

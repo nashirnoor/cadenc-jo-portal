@@ -16,12 +16,12 @@ import axios from "axios";
 import { FaUsers } from "react-icons/fa";
 import axiosInstance from '../users/utils/axiosInstance';
 import JobCardRecuiter from "./components/JobCardRecuiter";
-
+import { FaEdit } from 'react-icons/fa'; 
 import { toast } from 'sonner';
 
 
-
-const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
+const CompanyForm = ({ open, setOpen, companyInfo, onSubmit, onUpdate, getCompanyProfile }) => {
+  
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     mode: "onChange",
     defaultValues: companyInfo,
@@ -39,8 +39,10 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
   }, [companyInfo, setValue]);
 
   const closeModal = () => setOpen(false);
+  
 
   const handleFormSubmit = (data) => {
+
     const formData = new FormData();
     for (const key in data) {
       if (key === "company_logo") {
@@ -56,6 +58,7 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
     } 
     const jwt_access = localStorage.getItem('access') ? JSON.parse(localStorage.getItem('access')) : null;
     console.log(jwt_access)
+    
 
     axiosInstance.put(`http://localhost:8000/api/v1/auth/company-profile/update/${companyInfo.id}/`, formData, {
       headers: {
@@ -65,10 +68,19 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit }) => {
       .then(response => {
         if (typeof onSubmit === 'function') {
           onSubmit(response.data);
+          console.log("pppppppppp",response.data)
+          
         } else {
-          console.log(response.data);
+          console.log(response.data,"lllllll");
         }
         closeModal();
+        if (response.status === 200) {
+          // Call the onUpdate function with the updated data
+          onUpdate(formData);
+          setOpen(false);
+          toast.success('Company profile updated successfully');
+          getCompanyProfile();
+        }
       })
       .catch(error => {
         console.error('Error encountered:', error);
@@ -183,10 +195,10 @@ const CompanyProfile = () => {
   const [openForm, setOpenForm] = useState(false);
   const navigate = useNavigate();
   const [jobs2, setJobs2] = useState([]);
-
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [about, setAbout] = useState(companyInfo?.about || '');
 
   useEffect(() => {
-
     setInfo(companies[parseInt(params?.id) - 1 ?? 0]);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     getCompanyProfile();
@@ -223,7 +235,10 @@ const CompanyProfile = () => {
     };
 
     checkForm();
-  }, [navigate]);
+    if (companyInfo) {
+      setAbout(companyInfo.about || '');
+    }
+  }, [navigate,companyInfo]);
 
   useEffect(() => {
     let jwt_a = localStorage.getItem('access');
@@ -247,6 +262,34 @@ const CompanyProfile = () => {
     fetchJobs();
   }, []);
 
+
+  const handleAboutUpdate = async () => {
+    try {
+      let jwt_access = localStorage.getItem('access');
+      jwt_access = JSON.parse(jwt_access);
+
+      const response = await axios.patch(
+        'http://localhost:8000/api/v1/auth/company-profile-update/',
+        { about },
+        {
+          headers: {
+            'Authorization': `Bearer ${jwt_access}`,
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        setCompanyInfo({ ...companyInfo, about });
+        setIsEditingAbout(false);
+        toast.success('About section updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating about section:', error);
+      toast.error('Failed to update about section');
+    }
+  };
+
+
   const handleDelete = async (jobId) => {
     let jwt_a = localStorage.getItem('access');
     jwt_a = JSON.parse(jwt_a);
@@ -265,7 +308,6 @@ const CompanyProfile = () => {
       toast.error('Failed to delete job');
     }
   };
-
 
   const getCompanyProfile = async () => {
     try {
@@ -304,6 +346,10 @@ const CompanyProfile = () => {
     } else {
     }
   }, [jwt_access, user, navigate]);
+
+  const updateCompanyInfo = (updatedInfo) => {
+    setCompanyInfo(prevInfo => ({ ...prevInfo, ...updatedInfo }));
+  };
 
 
   const handleLogout = async () => {
@@ -353,6 +399,11 @@ const CompanyProfile = () => {
           </div>
 
           <div className="w-full flex flex-col md:flex-row justify-between mt-8 space-y-4 md:space-y-0 md:space-x-4">
+          {companyInfo?.company_logo && (
+              <div className="company-logo">
+                <img src={companyInfo.company_logo} alt="Company Logo" className="w-24 h-24 object-cover rounded-full" />
+              </div>
+            )}
             <p className="flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full">
               <HiLocationMarker /> {companyInfo?.company_location ?? 'No Location'}
             </p>
@@ -365,11 +416,7 @@ const CompanyProfile = () => {
             <p className="flex gap-1 items-center px-3 py-1 text-slate-600 rounded-full">
               <AiOutlineMail /> {companyInfo?.email_address ?? 'No Email'}
             </p>
-            {companyInfo?.company_logo && (
-              <div className="company-logo">
-                <img src={companyInfo.company_logo} alt="Company Logo" className="w-24 h-24 object-cover rounded-full" />
-              </div>
-            )}
+           
             <div>
             <button
               onClick={() => setOpenForm(true)}
@@ -383,9 +430,42 @@ const CompanyProfile = () => {
           </div>
          
 
-          <CompanyForm open={openForm} setOpen={setOpenForm} companyInfo={companyInfo}/>
+          <CompanyForm open={openForm} setOpen={setOpenForm} companyInfo={companyInfo} onUpdate={updateCompanyInfo } getCompanyProfile={getCompanyProfile} />
+           {/* New About section */}
+           <div className="mt-10 bg-white p-6 rounded-lg shadow-md">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold">About</h3>
+        <button
+          onClick={() => setIsEditingAbout(!isEditingAbout)}
+          className="text-blue-500 hover:text-blue-600"
+        >
+          <FaEdit size={20} />
+        </button>
+      </div>
+      {isEditingAbout ? (
+        <div>
+          <textarea
+            value={about}
+            onChange={(e) => setAbout(e.target.value)}
+            className="w-full p-2 border rounded-md"
+            rows="4"
+          />
+          <div className="mt-2 flex justify-end">
+            <button
+              onClick={handleAboutUpdate}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-gray-700">{about || 'No company description available.'}</p>
+      )}
+    </div>
 
-          <div className="flex flex-col items-center mt-10 md:mt-0">
+
+          <div className="flex flex-col items-center mt-10 md:mt-10">
             <span className="text-xl font-bold">{jobs?.length}</span>
             <p className="text-blue-600">Job Post</p>
           </div>

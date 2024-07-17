@@ -8,12 +8,12 @@ import { experience, jobTypes, jobs } from "../../../src/utils/data"
 import CustomButton from "./Custombutton";
 import ListBox from "./ListBox";
 import axios from "axios";
-import JobCard from "./JobCard";
 import SearchHeader from "./SearchHeader";
 import { useEffect } from "react";
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import Footer from "./Footer";
+import JobCard from "./JobCard";
 
 
 const FindJobs = () => {
@@ -169,11 +169,11 @@ const FindJobs = () => {
             </div>
           </div>
 
-          <div className='w-full flex flex-wrap gap-4'>
-            {jobs.map((job) => (
-              <JobCard job={job} key={job.id} />
-            ))}
-          </div>
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center'>
+  {jobs.map((job) => (
+    <JobCard job={job} key={job.id} />
+  ))}
+</div>
           
           <div className='w-full flex items-center justify-center pt-16'>
           <Stack spacing={2}>

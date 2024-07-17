@@ -127,6 +127,9 @@ const Navbar = () => {
             <li>
               <Link to='/about-us'>About</Link>
             </li>
+            <li>
+              <Link to='/about-us'>About</Link>
+            </li>
           </ul>
 
           <div className='hidden lg:block'>

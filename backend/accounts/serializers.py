@@ -261,10 +261,10 @@ class GoogleSignInSerializer(serializers.Serializer):
         user_id=user_data['sub']
         email=user_data['email']
         first_name=user_data['given_name']
-        last_name=user_data['family_name']
+        # last_name=user_data['family_name']
         provider='google'
 
-        return register_social_user(provider, email, first_name, last_name  )
+        return register_social_user(provider, email, first_name  )
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -283,10 +283,15 @@ class RecruiterListSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
+    job_count = serializers.SerializerMethodField()
+
     class Meta:
         model = CompanyProfile
-        fields = ["id", "recruiter", "company_name", "company_location", "company_strength", "contact_number", "email_address", "company_logo"]
-        read_only_fields = ['recruiter']
+        fields = ["id", "recruiter","about", "company_name", "company_location", "company_strength", "contact_number", "email_address", "company_logo","job_count"]
+        read_only_fields = ['recruiter','job_count']
+
+    def get_job_count(self, obj):
+        return obj.job_count()
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
@@ -296,12 +301,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-class SkillSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Skill
-        fields = ['id', 'name']
-
+    
 
 
 
@@ -346,12 +346,18 @@ class AdminLoginSerializer(serializers.ModelSerializer):
 
 
 from .models import Job
-
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = ['id', 'name']
 
 
 class JobSerializer(serializers.ModelSerializer):
     company_logo = serializers.SerializerMethodField()
     company_name = serializers.SerializerMethodField()
+    applicants_count = serializers.IntegerField(read_only=True)
+    skills = SkillSerializer(many=True, read_only=True)
+    skill_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
 
     class Meta:
         model = Job
@@ -359,9 +365,13 @@ class JobSerializer(serializers.ModelSerializer):
             'id', 'recruiter', 'job_title', 'job_type', 'salary', 
             'vacancies', 'experience', 'job_location', 'job_description', 
             'core_responsibilities', 'created_at', 'updated_at', 'company_logo',
-            'company_name'  # Add this field
+            'company_name', 'deleted', 'applicants_count','skills', 'skill_ids','job_location_type'
         ]
         read_only_fields = ['recruiter', 'created_at', 'updated_at']
+        
+
+    def get_applicants_count(self, obj):
+        return len(obj.applications)  # Count the number of applications
 
     def get_company_logo(self, obj):
         try:
@@ -378,3 +388,56 @@ class JobSerializer(serializers.ModelSerializer):
             return company_profile.company_name
         except CompanyProfile.DoesNotExist:
             return None
+    def create(self, validated_data):
+        skill_ids = validated_data.pop('skill_ids', [])
+        job = Job.objects.create(**validated_data)
+        job.skills.set(Skill.objects.filter(id__in=skill_ids))
+        return job
+
+    def update(self, instance, validated_data):
+        skill_ids = validated_data.pop('skill_ids', None)
+        job = super().update(instance, validated_data)
+        if skill_ids is not None:
+            job.skills.set(Skill.objects.filter(id__in=skill_ids))
+        return job
+
+       
+
+
+
+from rest_framework import serializers
+from .models import UserProfile
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    skills = SkillSerializer(many=True, read_only=True)
+    full_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    about = serializers.CharField(max_length=800, required=False)
+
+    class Meta:
+        model = UserProfile
+        fields = ['photo', 'skills', 'resume', 'full_name', 'email', 'position', 'about']
+
+    def get_full_name(self, obj):
+        return obj.user.get_full_name
+
+    def get_email(self, obj):
+        return obj.user.email
+
+    def update(self, instance, validated_data):
+        instance.about = validated_data.get('about', instance.about)
+        instance.save()
+        return instance
+    
+from .models import Education, Experience
+
+class EducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Education
+        fields = '__all__'
+
+class ExperienceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Experience
+        fields = '__all__'
+    

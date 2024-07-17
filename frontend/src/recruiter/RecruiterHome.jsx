@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import axiosInstance from '../users/utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import LandingBody from '../users/components/LandingBody';
 import Footer from '../users/components/Footer';
 import Header from './RecruiterHeader';
