@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { BiBriefcaseAlt2 } from "react-icons/bi";
 import { BsStars } from "react-icons/bs";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import Header from "../components/Header";
-import { experience, jobTypes, jobs } from "../../../src/utils/data"
 import CustomButton from "./Custombutton";
 import ListBox from "./ListBox";
 import axios from "axios";
@@ -18,30 +17,20 @@ import JobCard from "./JobCard";
 
 const FindJobs = () => {
   const [sort, setSort] = useState("Newest");
-  const [numPage, setNumPage] = useState(1);
-  const [recordCount, setRecordCount] = useState(0);
-  const [data, setData] = useState([]);
-
-
-
-  const [isFetching, setIsFetching] = useState(false);
-
-  // const location = useLocation();
-  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
-
   const [searchTitle, setSearchTitle] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-
-
-
+  const [jobTypes, setJobTypes] = useState([]);
+  const [experiences, setExperiences] = useState([]);
+  const [locationTypes, setLocationTypes] = useState([]);
+  const [filteredJobs, setFilteredJobs] = useState([]);
+  const [filteredTotalPages, setFilteredTotalPages] = useState(0);
 
 
   useEffect(() => {
@@ -51,7 +40,7 @@ const FindJobs = () => {
         const response = await axios.get(`http://localhost:8000/api/v1/auth/api/jobs/?page=${currentPage}&job_title=${searchTitle}&job_location=${searchLocation}`);
         console.log("API Response:", response.data);
         setJobs(response.data.results);
-        setTotalPages(Math.ceil(response.data.count / 10)); 
+        setTotalPages(Math.ceil(response.data.count / 10));
         setLoading(false);
       } catch (err) {
         setError('Failed to fetch jobs');
@@ -63,36 +52,75 @@ const FindJobs = () => {
     fetchJobs();
   }, [currentPage, searchTitle, searchLocation]);
 
+  useEffect(() => {
+    setFilteredJobs(filterJobs(jobs));
+  }, [jobs, jobTypes, experiences, locationTypes]);
+  
+  useEffect(() => {
+    setFilteredTotalPages(Math.ceil(filteredJobs.length / 10));
+  }, [filteredJobs]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     setSearchTitle(searchQuery);
     setSearchLocation(location);
     setCurrentPage(1);
   };
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [jobTypes, experiences, locationTypes]);
+
+  const handleJobTypeChange = (e) => {
+    const value = e.target.value;
+    setJobTypes(prev => {
+      const newJobTypes = e.target.checked ? [...prev, value] : prev.filter(type => type !== value);
+      console.log('Updated job types:', newJobTypes);
+      return newJobTypes;
+    });
+  };
+
+  const handleExperienceChange = (e) => {
+    const value = e.target.value;
+    setExperiences(prev => 
+      e.target.checked ? [...prev, value] : prev.filter(exp => exp !== value)
+    );
+  };
+
+  const handleLocationTypeChange = (e) => {
+    const value = e.target.value;
+    setLocationTypes(prev => 
+      e.target.checked ? [...prev, value] : prev.filter(type => type !== value)
+    );
+  };
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };
 
+  const filterJobs = (jobs) => {
+    return jobs.filter(job => {
+      const jobTypeMatch = jobTypes.length === 0 || jobTypes.includes(job.job_type);
+      const experienceMatch = experiences.length === 0 || experiences.includes(job.experience);
+      const locationTypeMatch = locationTypes.length === 0 || locationTypes.includes(job.job_location_type);
+      return jobTypeMatch && experienceMatch && locationTypeMatch;
+    });
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-
   return (
-
     <div>
       <Header />
       <SearchHeader
-  title='Find Your Dream Job with Ease'
-  type='home'
-  handleClick={handleSearch}
-  searchQuery={searchQuery}
-  setSearchQuery={setSearchQuery}
-  location={location}
-  setLocation={setLocation}
-/>
-
+        title='Find Your Dream Job with Ease'
+        type='home'
+        handleClick={handleSearch}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        location={location}
+        setLocation={setLocation}
+      />
       <div className='container mx-auto flex gap-6 2xl:gap-10 md:px-5 py-0 md:py-6 bg-[#f7fdfd]'>
         <div className='hidden md:flex flex-col w-1/6 h-fit bg-white shadow-sm'>
           <p className='text-lg font-semibold text-slate-600'>Filter Search</p>
@@ -103,29 +131,25 @@ const FindJobs = () => {
                 <BiBriefcaseAlt2 />
                 Job Type
               </p>
-
               <button>
                 <MdOutlineKeyboardArrowDown />
               </button>
             </div>
-
             <div className='flex flex-col gap-2'>
-              {jobTypes.map((jtype, index) => (
-                <div key={index} className='flex gap-2 text-sm md:text-base '>
-                  <input
-                    type='checkbox'
-                    value={jtype}
-                    className='w-4 h-4'
-                    onChange={(e) => filterJobs(e.target.value)}
-                  />
-                  <span>{jtype}</span>
-                </div>
-              ))}
-            </div>
+            {['full_time', 'part_time', 'contract', 'intern'].map((type) => (
+              <div key={type} className='flex gap-2 text-sm md:text-base'>
+                <input
+                  type='checkbox'
+                  value={type}
+                  className='w-4 h-4'
+                  onChange={handleJobTypeChange}
+                  checked={jobTypes.includes(type)}
+                />
+                <span>{type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1)}</span>
+              </div>
+            ))}
           </div>
-
-
-
+          </div>
 
           <div className='py-2 mt-4'>
             <div className='flex justify-between mb-3'>
@@ -133,61 +157,84 @@ const FindJobs = () => {
                 <BsStars />
                 Experience
               </p>
-
               <button>
                 <MdOutlineKeyboardArrowDown />
               </button>
             </div>
-
             <div className='flex flex-col gap-2'>
-              {experience.map((exp) => (
-                <div key={exp.title} className='flex gap-3'>
-                  <input
-                    type='checkbox'
-                    value={exp?.value}
-                    className='w-4 h-4'
-                    onChange={(e) => filterExperience(e.target.value)}
-                  />
-                  <span>{exp.title}</span>
-                </div>
-              ))}
+            {['under 1', '1 - 3 years', '3 - 5 years', '6+ years'].map((exp) => (
+              <div key={exp} className='flex gap-3'>
+                <input
+                  type='checkbox'
+                  value={exp}
+                  className='w-4 h-4'
+                  onChange={handleExperienceChange}
+                  checked={experiences.includes(exp)}
+                />
+                <span>{exp}</span>
+              </div>
+            ))}
+              
+            </div>
+          </div>
+          <div className='py-2 mt-4'>
+            <div className='flex justify-between mb-3'>
+              <p className='flex items-center gap-2 font-semibold'>
+                <BsStars />
+                Location Type
+              </p>
+              <button>
+                <MdOutlineKeyboardArrowDown />
+              </button>
+            </div>
+            <div className='flex flex-col gap-2'>
+               
+            {['on_site', 'hybrid', 'remote'].map((type) => (
+              <div key={type} className='flex gap-3'>
+                <input
+                  type='checkbox'
+                  value={type}
+                  className='w-4 h-4'
+                  onChange={handleLocationTypeChange}
+                  checked={locationTypes.includes(type)}
+                />
+                <span>{type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1)}</span>
+              </div>
+            ))}
             </div>
           </div>
         </div>
-
+        
         <div className='w-full md:w-5/6 px-5 md:px-0'>
           <div className='flex items-center justify-between mb-4'>
-            <p className='text-sm md:text-base'>
-              Shwoing: <span className='font-semibold'>1,902</span> Jobs
-              Available
-            </p>
-
+          <p className='text-sm md:text-base'>
+  Showing: <span className='font-semibold'>{filteredJobs.length}</span> Jobs
+  Available
+</p>
             <div className='flex flex-col md:flex-row gap-0 md:gap-2 md:items-center'>
               <p className='text-sm md:text-base'>Sort By:</p>
-
               <ListBox sort={sort} setSort={setSort} />
             </div>
           </div>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center'>
-  {jobs.map((job) => (
+         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center'>
+  {filteredJobs.map((job) => (
     <JobCard job={job} key={job.id} />
   ))}
 </div>
-          
           <div className='w-full flex items-center justify-center pt-16'>
-          <Stack spacing={2}>
-          <Pagination 
-            count={totalPages} 
-            page={currentPage} 
-            onChange={handlePageChange} 
-            color="primary" 
-          />
-        </Stack>
-      </div>
+            <Stack spacing={2}>
+            <Pagination
+  count={filteredTotalPages}
+  page={currentPage}
+  onChange={handlePageChange}
+  color="primary"
+/>
+            </Stack>
+          </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 };

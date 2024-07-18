@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import ChatMessage
-from accounts.serializers import UserRegisterSerializer
+from accounts.serializers import UserRegisterSerializer,UserSerialzier
 
 
 class UserGetSerializer(serializers.ModelSerializer):
@@ -12,8 +12,8 @@ class UserGetSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    receiver_profile = UserRegisterSerializer(read_only=True)
-    sender_profile =  UserRegisterSerializer(read_only=True)
+    receiver_profile = UserSerialzier(read_only=True)
+    sender_profile =  UserSerialzier(read_only=True)
 
     class Meta:
         model = ChatMessage

@@ -142,8 +142,6 @@ class Job(models.Model):
     skills = models.ManyToManyField('Skill', related_name='user_jobs', blank=True, verbose_name=_("Skills"))
     job_location_type = models.CharField(max_length=20, choices=JOB_LOCATION_TYPES, default='on_site', verbose_name=_("Job Location Type"))
 
-
-
     class Meta:
         unique_together = ['recruiter', 'job_title']
 

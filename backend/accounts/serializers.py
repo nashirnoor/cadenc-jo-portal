@@ -59,6 +59,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
                 password=validated_data.get('password')
             )
             return user
+        
+class UserSerialzier(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
 
 class RecruiterRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
@@ -224,7 +229,6 @@ class LogoutUserSerializer(serializers.Serializer):
 class GoogleSignInSerializer(serializers.Serializer):
     access_token=serializers.CharField(min_length=6)
 
-
     def validate_access_token(self, access_token):
         user_data=Google.validate(access_token)
         try:
@@ -243,28 +247,28 @@ class GoogleSignInSerializer(serializers.Serializer):
 
         return register_social_user(provider, email, first_name)
 
-class GoogleSignInSerializer(serializers.Serializer):
-    access_token=serializers.CharField(min_length=6)
+# class GoogleSignInSerializer(serializers.Serializer):
+#     access_token=serializers.CharField(min_length=6)
 
 
-    def validate_access_token(self, access_token):
-        user_data=Google.validate(access_token)
-        try:
-            user_data['sub']
+#     def validate_access_token(self, access_token):
+#         user_data=Google.validate(access_token)
+#         try:
+#             user_data['sub']
             
-        except:
-            raise serializers.ValidationError("this token has expired or invalid please try again")
+#         except:
+#             raise serializers.ValidationError("this token has expired or invalid please try again")
         
-        if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
-                raise AuthenticationFailed('Could not verify user.')
+#         if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
+#                 raise AuthenticationFailed('Could not verify user.')
 
-        user_id=user_data['sub']
-        email=user_data['email']
-        first_name=user_data['given_name']
-        # last_name=user_data['family_name']
-        provider='google'
+#         user_id=user_data['sub']
+#         email=user_data['email']
+#         first_name=user_data['given_name']
+#         # last_name=user_data['family_name']
+#         provider='google'
 
-        return register_social_user(provider, email, first_name  )
+        # return register_social_user(provider, email, first_name  )
 
 
 class UserListSerializer(serializers.ModelSerializer):

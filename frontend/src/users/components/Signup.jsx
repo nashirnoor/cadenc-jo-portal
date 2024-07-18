@@ -71,15 +71,18 @@ const Signup = () => {
         } catch (error) {
             setError(error.response.data.email || error.response.data.phone_number || 'An error occurred');
           }
-    };
+    };  
     const handleSignInWithGoogle = async (response) => {
         const payload = response.credential;
+        console.log("Google OAuth payload:", payload); // Log the token
+
         const server_res = await axios.post("http://localhost:8000/google/", { 'access_token': payload });
         console.log(server_res.data, 'server');
         const user = {
             "email": server_res.data.email,
             "names": server_res.data.full_name
         };
+        print(server_res.status)
         if (server_res.status === 200) {
             console.table(server_res.data);
             localStorage.setItem("user", JSON.stringify(user));

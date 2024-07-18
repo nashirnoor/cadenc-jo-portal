@@ -227,12 +227,14 @@ class AdminLogoutApiView(GenericAPIView):
 
 class GoogleOauthSignInview(GenericAPIView):
     serializer_class=GoogleSignInSerializer
+
     def post(self, request):
-        print(request.data,"googleeeeeeeee viewwwwwwwwwww posttttt\n goooo\nggggggooo")
+        print(request.data)
         serializer=self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         data=((serializer.validated_data)['access_token'])
         return Response(data, status=status.HTTP_200_OK) 
+    
     
 
 
@@ -319,6 +321,28 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 from django.db.models import Q
 
+# @api_view(['GET'])
+# def job_list(request):
+#     job_title = request.query_params.get('job_title', '')
+#     job_location = request.query_params.get('job_location', '')
+
+#     jobs = Job.objects.all().order_by('-created_at').filter(deleted=False)
+#     print(jobs)
+
+#     if job_title:
+#         jobs = jobs.filter(job_title__icontains=job_title)
+#     if job_location:
+#         jobs = jobs.filter(job_location__icontains=job_location)
+
+#     paginator = StandardResultsSetPagination()
+#     result_page = paginator.paginate_queryset(jobs, request)
+#     serializer = JobSerializer(result_page, many=True, context={'request': request})
+#     return paginator.get_paginated_response(serializer.data)
+from operator import or_
+from functools import reduce
+
+
+
 @api_view(['GET'])
 def job_list(request):
     job_title = request.query_params.get('job_title', '')
@@ -336,6 +360,8 @@ def job_list(request):
     result_page = paginator.paginate_queryset(jobs, request)
     serializer = JobSerializer(result_page, many=True, context={'request': request})
     return paginator.get_paginated_response(serializer.data)
+
+
 
 @api_view(['GET'])
 def job_detail(request, pk):
