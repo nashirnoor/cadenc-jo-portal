@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import ChatMessage
-from accounts.serializers import UserRegisterSerializer,UserSerialzier
+from accounts.serializers import UserSerialzier
 
 
 class UserGetSerializer(serializers.ModelSerializer):

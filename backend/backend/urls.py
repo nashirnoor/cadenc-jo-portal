@@ -13,7 +13,7 @@ urlpatterns = [
     path('admin-home/', AdminHomeView.as_view(), name='admin-home'),
 
     path('api/v1/auth/', include('accounts.urls')),
-    path('chat/',include('chat.urls')),
+    # path('chat/',include('chat.urls')),
     # path('api/users/', get_user_list, name='users'),
     # path('api/users/<int:id>/', get_user_by_id, name='user-detail'),
 

@@ -49,37 +49,37 @@ from .models import ChatMessage
 #         print("Error in getting user by ID", str(e))
 #         return Response({"error": "Error in getting user by ID"}, status=400)
 
-class MyInbox(generics.ListAPIView):
-    serializer_class = MessageSerializer
+# class MyInbox(generics.ListAPIView):
+#     serializer_class = MessageSerializer
 
-    def get_queryset(self):
-        user_id = self.kwargs['user_id']
-        return ChatMessage.objects.filter(
-            Q(sender_id=user_id) | Q(receiver_id=user_id)
-        ).order_by('-date')
+#     def get_queryset(self):
+#         user_id = self.kwargs['user_id']
+#         return ChatMessage.objects.filter(
+#             Q(sender_id=user_id) | Q(receiver_id=user_id)
+#         ).order_by('-date')
 
-class GetMessages(generics.ListAPIView):
-    serializer_class = MessageSerializer
+# class GetMessages(generics.ListAPIView):
+#     serializer_class = MessageSerializer
 
-    def get_queryset(self):
-        sender_id = self.kwargs['sender_id']
-        receiver_id = self.kwargs['receiver_id']
-        return ChatMessage.objects.filter(
-            (Q(sender_id=sender_id) & Q(receiver_id=receiver_id)) |
-            (Q(sender_id=receiver_id) & Q(receiver_id=sender_id))
-        ).order_by('date')
+#     def get_queryset(self):
+#         sender_id = self.kwargs['sender_id']
+#         receiver_id = self.kwargs['receiver_id']
+#         return ChatMessage.objects.filter(
+#             (Q(sender_id=sender_id) & Q(receiver_id=receiver_id)) |
+#             (Q(sender_id=receiver_id) & Q(receiver_id=sender_id))
+#         ).order_by('date')
     
 
-from rest_framework import generics, status
+# from rest_framework import generics, status
     
-from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import IsAuthenticated
 
-class SendMessage(generics.GenericAPIView):
-    serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated]  # Ensure this is included
+# class SendMessage(generics.GenericAPIView):
+#     serializer_class = MessageSerializer
+#     permission_classes = [IsAuthenticated]  # Ensure this is included
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        message = serializer.save(sender=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         message = serializer.save(sender=request.user)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
