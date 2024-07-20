@@ -3,7 +3,8 @@ import json
 from channels.db import database_sync_to_async
 from .models import ChatMessage
 from accounts.models import User
-
+from django.utils import timezone  # Add this import at the top of your file
+from datetime import datetime
 
 class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -62,7 +63,9 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def chat_message(self, event):
         message = event['message']
+        timestamp = timezone.now().isoformat()
         await self.send(text_data=json.dumps({
             "message": message,
-            "sent": event['user_id'] == self.scope['user'].id
+            "sent": event['user_id'] == self.scope['user'].id,
+            "date": timestamp
         }))

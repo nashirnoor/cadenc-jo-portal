@@ -33,6 +33,14 @@ const FindJobs = () => {
   const [filteredTotalPages, setFilteredTotalPages] = useState(0);
 
 
+  const sortJobs = (jobs, sortOrder) => {
+    return [...jobs].sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      return sortOrder === "Newest" ? dateB - dateA : dateA - dateB;
+    });
+  };
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -52,10 +60,13 @@ const FindJobs = () => {
     fetchJobs();
   }, [currentPage, searchTitle, searchLocation]);
 
+ 
+
   useEffect(() => {
-    setFilteredJobs(filterJobs(jobs));
-  }, [jobs, jobTypes, experiences, locationTypes]);
-  
+    const filteredAndSortedJobs = sortJobs(filterJobs(jobs), sort);
+    setFilteredJobs(filteredAndSortedJobs);
+  }, [jobs, jobTypes, experiences, locationTypes, sort]);
+
   useEffect(() => {
     setFilteredTotalPages(Math.ceil(filteredJobs.length / 10));
   }, [filteredJobs]);

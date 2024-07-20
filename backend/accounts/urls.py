@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, GoogleOauthSignInview, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView, PendingRecruitersView,check_company_profile,SkillListCreateAPIView,SkillDeleteAPIView,CheckUserProfileView, CreateUserProfileView,UserProfileView,UpdateUserProfileView,apply_job,get_job_applicants,download_resume,JobPostedList,CompanyListView,CompanyProfileDetailView,CompanyJobsView,suggested_jobs,CreateEducationView, CreateExperienceView
+from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView, PendingRecruitersView,check_company_profile,SkillListCreateAPIView,SkillDeleteAPIView,CheckUserProfileView, CreateUserProfileView,UserProfileView,UpdateUserProfileView,apply_job,get_job_applicants,download_resume,JobPostedList,CompanyListView,CompanyProfileDetailView,CompanyJobsView,suggested_jobs,CreateEducationView, CreateExperienceView,AllUserListView
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from accounts import views
+from chat.views import get_chat_history
 
 
 
@@ -53,6 +54,8 @@ urlpatterns = [
     path('api/jobs/<int:job_id>/suggested/', suggested_jobs, name='suggested-jobs'),
     path('education/', CreateEducationView.as_view(), name='create-education'),
     path('experience/', CreateExperienceView.as_view(), name='create-experience'),
+    path('all-users/', AllUserListView.as_view(), name='user-list'),
+    path('chat/history/<int:user_id>/', get_chat_history, name='chat_history'),
 
 
 

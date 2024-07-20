@@ -32,12 +32,11 @@ import ExperienceForm from './users/components/UserForm/ExperienceForm';
 import EducationForm from './users/components/UserForm/EducationForm';
 import JobPosted from './recruiter/JobPosted';
 import Applicants from './recruiter/Applicants';
-import ChatPage from './users/components/Chat/ChatPage';
 import CompanyProfileUser from './users/components/CompanyProfileUser';
+import ChatPage from './users/components/Chat/ChatPage';
 // import PageChat from './users/components/Chat/PageChat';
-// import ChatPage from './users/components/chats/ChatPage';
-// import Chat from './users/components/Chat/Chat';
-// import ChatList from './users/components/Chat/ChatList';
+
+
 
 function App() {
   
@@ -117,8 +116,12 @@ function App() {
             />
           )}
         </Route> */}
-              <Route path="/chat" element={<ChatPage />} />
+              {/* <Route path="/chat" element={<ChatPage />} /> */}
               <Route path="/company-profile-user/:id" element={<CompanyProfileUser />} />
+
+              {/* <Route path="/chat/:id" element={<ChatPage />} /> */}
+               <Route path="/chat" element={<ChatPage/>} />
+
 
 
 

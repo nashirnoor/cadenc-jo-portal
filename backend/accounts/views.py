@@ -251,6 +251,25 @@ class UserListView(generics.ListAPIView):
 
     def get_queryset(self):
         return User.objects.filter(user_type='normal')
+    
+#all user for testing
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from .models import User
+from .serializers import UserSerialzier
+
+class AllUserListView(APIView):
+    def get(self, request):
+        current_user = request.user
+        chatted_users = User.objects.filter(
+            Q(sent_messages__receiver=current_user) | Q(received_messages__sender=current_user)
+        ).distinct()
+        serializer = UserSerialzier(chatted_users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerialzier
 
 class CustomPaginationrecruiter(PageNumberPagination):
     page_size = 8

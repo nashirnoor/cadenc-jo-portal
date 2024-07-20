@@ -13,8 +13,8 @@ class UserGetSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     receiver_profile = UserSerialzier(read_only=True)
-    sender_profile =  UserSerialzier(read_only=True)
+    sender_profile = UserSerialzier(read_only=True)
 
     class Meta:
         model = ChatMessage
-        fields = ['id','user','sender','sender_profile','receiver','receiver_profile','message','is_read','date']
+        fields = ['id', 'sender', 'sender_profile', 'receiver', 'receiver_profile', 'content', 'is_read', 'date']
