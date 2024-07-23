@@ -30,7 +30,7 @@
   background: #555; /* Hover color for the scrollbar thumb */
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -45,4 +45,4 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-600;
-}
+} */

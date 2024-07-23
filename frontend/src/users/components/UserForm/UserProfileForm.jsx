@@ -14,6 +14,7 @@ const UserProfileForm = ({ onSubmit }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [photoPreview, setPhotoPreview] = useState(null);
   const [errors, setErrors] = useState({});
+  
 
   useEffect(() => {
     fetchSkills();

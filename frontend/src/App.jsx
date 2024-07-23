@@ -120,7 +120,8 @@ function App() {
               <Route path="/company-profile-user/:id" element={<CompanyProfileUser />} />
 
               {/* <Route path="/chat/:id" element={<ChatPage />} /> */}
-               <Route path="/chat" element={<ChatPage/>} />
+               {/* <Route path="/chat" element={<ChatPage/>} /> */}
+               <Route path="/chat/:userId?" element={<ChatPage />} />
 
 
 

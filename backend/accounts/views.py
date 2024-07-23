@@ -735,6 +735,32 @@ class CreateEducationView(APIView):
         educations = Education.objects.filter(user_profile=user_profile)
         serializer = EducationSerializer(educations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, pk=None):
+        user_profile = request.user.profile
+        try:
+            education = Education.objects.get(pk=pk, user_profile=user_profile)
+            education.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Education.DoesNotExist:
+            return Response({'error': 'Education not found or not authorized to delete this education'}, status=status.HTTP_404_NOT_FOUND)
+    
+    def put(self, request, pk=None):
+        if pk is None:
+            return Response({'error': 'Education ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user_profile = request.user.profile
+        try:
+            education = Education.objects.get(pk=pk, user_profile=user_profile)
+            data = request.data.copy()
+            data['user_profile'] = user_profile.id
+            serializer = EducationSerializer(education, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Education.DoesNotExist:
+            return Response({'error': 'Education not found or not authorized to edit this education'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CreateExperienceView(APIView):
@@ -755,6 +781,31 @@ class CreateExperienceView(APIView):
         experiences = Experience.objects.filter(user_profile=user_profile)
         serializer = ExperienceSerializer(experiences, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def put(self, request, pk=None):
+        user_profile = request.user.profile
+        try:
+            experience = Experience.objects.get(pk=pk, user_profile=user_profile)
+        except Experience.DoesNotExist:
+            return Response({'error': 'Experience not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ExperienceSerializer(experience, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk=None):
+        user_profile = request.user.profile
+        try:
+
+            experience = Experience.objects.get(pk=pk, user_profile=user_profile)
+            print()
+        except Experience.DoesNotExist:
+            return Response({'error': 'Experience not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        experience.delete()
+        return Response({'message': 'Experience deleted'}, status=status.HTTP_204_NO_CONTENT)
 
     
 
@@ -855,8 +906,15 @@ def get_job_applicants(request, job_id):
         print(f"Job with ID {job_id} not found")
         return Response({'error': 'Job not found'}, status=404)
     
-    
+from django.shortcuts import get_object_or_404
 
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_details(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    serializer = UserSerialzier(user)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])

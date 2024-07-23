@@ -1,31 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { companies } from "../../utils/data";
 import CompanyCard from "./CompanyCard";
 import CustomButton from "./Custombutton";
-import ListBox from "./ListBox";
-import SearchHeader from "./SearchHeader";
-import Header from "../../recruiter/RecruiterHeader";
 import axios from "axios";
+import Header from "./Header";
+
 
 const Companies = () => {
-  const [page, setPage] = useState(1);
-  const [numPage, setNumPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [cmpLocation, setCmpLocation] = useState("");
-  const [sort, setSort] = useState("Newest");
-  const [isFetching, setIsFetching] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(companies ?? []);
   const [error, setError] = useState(null);
-
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
         const response = await axios.get('http://localhost:8000/api/v1/auth/companies/');
+        console.log('Fetched Companies:', response.data);
         setCompanies(response.data);
         setLoading(false);
       } catch (err) {
@@ -38,56 +29,81 @@ const Companies = () => {
     fetchCompanies();
   }, []);
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setShowSuggestions(true);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setShowSuggestions(false);
+  };
+
+  const filteredCompanies = companies.filter(company =>
+    company.company_name && company.company_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion);
+    setShowSuggestions(false);
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-
-  const handleSearchSubmit = () => {};
   const handleShowMore = () => {};
 
   return (
     <div className='w-full'>
-      <Header/>
-      <SearchHeader
-      title='Find Your Dream Company'
-      handleClick={handleSearchSubmit}
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      location={cmpLocation}
-      setLocation={setSearchQuery}
-    />
-
+      <Header />
       <div className='container mx-auto flex flex-col gap-5 2xl:gap-10 px-5 md:px-0 py-6 bg-[#f7fdfd]'>
         <div className='flex items-center justify-between mb-4'>
+          <div className='relative w-80'>
+            <input
+              type='text'
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder='Search companies...'
+              className='px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 w-full'
+            />
+            {searchQuery && (
+              <button
+                onClick={handleClearSearch}
+                className='absolute right-2 top-2 px-2 py-1 bg-gray-200 text-gray-600 rounded-md hover:bg-gray-300 focus:outline-none'
+              >
+                &#10005; {/* This is the 'X' symbol */}
+              </button>
+            )}
+            {showSuggestions && searchQuery && (
+              <div className='absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full max-h-40 overflow-y-auto'>
+                {filteredCompanies.map((company) => (
+                  <div
+                    key={company.id}
+                    onClick={() => handleSuggestionClick(company.company_name)}
+                    className='px-4 py-2 cursor-pointer hover:bg-gray-200'
+                  >
+                    {company.company_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <p className='text-sm md:text-base'>
-            Showing: <span className='font-semibold'>1,902</span> Companies
+            Showing: <span className='font-semibold'>{filteredCompanies.length}</span> Companies
             Available
           </p>
-
-          <div className='flex flex-col md:flex-row gap-0 md:gap-2 md:items-center'>
-            <p className='text-sm md:text-base'>Sort By:</p>
-
-            <ListBox sort={sort} setSort={setSort} />
-          </div>
         </div>
-
         <div className='w-full flex flex-col gap-6'>
-        {companies.map((company) => (
-        <CompanyCard key={company.id} company={company} />
-      ))}
-
-          {isFetching && (
-            <div className='mt-10'>
-              <Loading />
+          {filteredCompanies.map((company) => (
+            <div key={company.id}>
+              <CompanyCard company={company} />
+              {/* For debugging: */}
+              {/* <div>{company.company_name}</div> */}
             </div>
-          )}
-
-          <p className='text-sm text-right'>
-            {data?.length} records out of records count
-          </p>
+          ))}
+          {filteredCompanies.length === 0 && <p>No companies found.</p>}
         </div>
-
-        {numPage > page && !isFetching && (
+        {false && ( // Temporary disable pagination for debugging
           <div className='w-full flex items-center justify-center pt-16'>
             <CustomButton
               onClick={handleShowMore}

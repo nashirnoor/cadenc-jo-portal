@@ -70,8 +70,10 @@ const Header = () => {
 
   return (
     <nav className="px-4 lg:px-28 flex justify-between items-center h-24 bg-white relative">
-      <h1 className="font-semibold text-4xl"><Link to="/landing">Cadenc</Link></h1>
-
+<h1 className="font-semibold text-4xl">
+            <Link to="/landing"><img src={"/images/official_logo.png"}className="h-16" alt="Cadenc"/>
+</Link>
+          </h1>
       {/* Desktop Menu */}
       <div className="hidden md:flex space-x-6">
         <Link to="/about" className="font-bold hover:text-blue-500">About</Link>

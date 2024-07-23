@@ -31,6 +31,8 @@ const FindJobs = () => {
   const [locationTypes, setLocationTypes] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [filteredTotalPages, setFilteredTotalPages] = useState(0);
+  const [salaryRanges, setSalaryRanges] = useState([]);
+
 
 
   const sortJobs = (jobs, sortOrder) => {
@@ -47,6 +49,7 @@ const FindJobs = () => {
         setLoading(true);
         const response = await axios.get(`http://localhost:8000/api/v1/auth/api/jobs/?page=${currentPage}&job_title=${searchTitle}&job_location=${searchLocation}`);
         console.log("API Response:", response.data);
+        console.log(response.data.results.salary)
         setJobs(response.data.results);
         setTotalPages(Math.ceil(response.data.count / 10));
         setLoading(false);
@@ -56,16 +59,16 @@ const FindJobs = () => {
         setLoading(false);
       }
     };
-  
+
     fetchJobs();
   }, [currentPage, searchTitle, searchLocation]);
 
- 
+
 
   useEffect(() => {
     const filteredAndSortedJobs = sortJobs(filterJobs(jobs), sort);
     setFilteredJobs(filteredAndSortedJobs);
-  }, [jobs, jobTypes, experiences, locationTypes, sort]);
+  }, [jobs, jobTypes, experiences, locationTypes, sort,salaryRanges]);
 
   useEffect(() => {
     setFilteredTotalPages(Math.ceil(filteredJobs.length / 10));
@@ -92,17 +95,25 @@ const FindJobs = () => {
 
   const handleExperienceChange = (e) => {
     const value = e.target.value;
-    setExperiences(prev => 
+    setExperiences(prev =>
       e.target.checked ? [...prev, value] : prev.filter(exp => exp !== value)
     );
   };
 
   const handleLocationTypeChange = (e) => {
     const value = e.target.value;
-    setLocationTypes(prev => 
+    setLocationTypes(prev =>
       e.target.checked ? [...prev, value] : prev.filter(type => type !== value)
     );
   };
+
+  const handleSalaryChange = (e) => {
+    const value = e.target.value;
+    setSalaryRanges(prev =>
+      e.target.checked ? [...prev, value] : prev.filter(range => range !== value)
+    );
+  };
+  
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
@@ -113,9 +124,20 @@ const FindJobs = () => {
       const jobTypeMatch = jobTypes.length === 0 || jobTypes.includes(job.job_type);
       const experienceMatch = experiences.length === 0 || experiences.includes(job.experience);
       const locationTypeMatch = locationTypes.length === 0 || locationTypes.includes(job.job_location_type);
-      return jobTypeMatch && experienceMatch && locationTypeMatch;
+      const salaryMatch = salaryRanges.length === 0 || salaryRanges.some(range => {
+        const salary = parseFloat(job.salary);
+        if (range === '300000-500000') return salary >= 300000 && salary <= 500000;
+        if (range === '500000-700000') return salary >= 500000 && salary <= 700000;
+        if (range === '700000-1000000') return salary >= 700000 && salary <= 1000000;
+        if (range === '1000000+') return salary > 1000000;
+        return false;
+      });
+      return jobTypeMatch && experienceMatch && locationTypeMatch && salaryMatch;
     });
   };
+  
+  
+
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -147,19 +169,19 @@ const FindJobs = () => {
               </button>
             </div>
             <div className='flex flex-col gap-2'>
-            {['full_time', 'part_time', 'contract', 'intern'].map((type) => (
-              <div key={type} className='flex gap-2 text-sm md:text-base'>
-                <input
-                  type='checkbox'
-                  value={type}
-                  className='w-4 h-4'
-                  onChange={handleJobTypeChange}
-                  checked={jobTypes.includes(type)}
-                />
-                <span>{type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1)}</span>
-              </div>
-            ))}
-          </div>
+              {['full_time', 'part_time', 'contract', 'intern'].map((type) => (
+                <div key={type} className='flex gap-2 text-sm md:text-base'>
+                  <input
+                    type='checkbox'
+                    value={type}
+                    className='w-4 h-4'
+                    onChange={handleJobTypeChange}
+                    checked={jobTypes.includes(type)}
+                  />
+                  <span>{type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1)}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className='py-2 mt-4'>
@@ -173,19 +195,19 @@ const FindJobs = () => {
               </button>
             </div>
             <div className='flex flex-col gap-2'>
-            {['under 1', '1 - 3 years', '3 - 5 years', '6+ years'].map((exp) => (
-              <div key={exp} className='flex gap-3'>
-                <input
-                  type='checkbox'
-                  value={exp}
-                  className='w-4 h-4'
-                  onChange={handleExperienceChange}
-                  checked={experiences.includes(exp)}
-                />
-                <span>{exp}</span>
-              </div>
-            ))}
-              
+              {['under 1', '1 - 3 years', '3 - 5 years', '6+ years'].map((exp) => (
+                <div key={exp} className='flex gap-3'>
+                  <input
+                    type='checkbox'
+                    value={exp}
+                    className='w-4 h-4'
+                    onChange={handleExperienceChange}
+                    checked={experiences.includes(exp)}
+                  />
+                  <span>{exp}</span>
+                </div>
+              ))}
+
             </div>
           </div>
           <div className='py-2 mt-4'>
@@ -199,48 +221,74 @@ const FindJobs = () => {
               </button>
             </div>
             <div className='flex flex-col gap-2'>
-               
-            {['on_site', 'hybrid', 'remote'].map((type) => (
-              <div key={type} className='flex gap-3'>
-                <input
-                  type='checkbox'
-                  value={type}
-                  className='w-4 h-4'
-                  onChange={handleLocationTypeChange}
-                  checked={locationTypes.includes(type)}
-                />
-                <span>{type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1)}</span>
-              </div>
-            ))}
+
+              {['on_site', 'hybrid', 'remote'].map((type) => (
+                <div key={type} className='flex gap-3'>
+                  <input
+                    type='checkbox'
+                    value={type}
+                    className='w-4 h-4'
+                    onChange={handleLocationTypeChange}
+                    checked={locationTypes.includes(type)}
+                  />
+                  <span>{type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1)}</span>
+                </div>
+              ))}
             </div>
           </div>
+          <div className='py-2 mt-4'>
+  <div className='flex justify-between mb-3'>
+    <p className='flex items-center gap-2 font-semibold'>
+      <BsStars />
+      Salary
+    </p>
+    <button>
+      <MdOutlineKeyboardArrowDown />
+    </button>
+  </div>
+  <div className='flex flex-col gap-2'>
+    {['300000-500000', '500000-700000', '700000-1000000', '1000000+'].map((range) => (
+      <div key={range} className='flex gap-3'>
+        <input
+          type='checkbox'
+          value={range}
+          className='w-4 h-4'
+          onChange={handleSalaryChange}
+          checked={salaryRanges.includes(range)}
+        />
+        <span>{range}</span>
+      </div>
+    ))}
+  </div>
+</div>
+
         </div>
-        
+
         <div className='w-full md:w-5/6 px-5 md:px-0'>
           <div className='flex items-center justify-between mb-4'>
-          <p className='text-sm md:text-base'>
-  Showing: <span className='font-semibold'>{filteredJobs.length}</span> Jobs
-  Available
-</p>
+            <p className='text-sm md:text-base'>
+              Showing: <span className='font-semibold'>{filteredJobs.length}</span> Jobs
+              Available
+            </p>
             <div className='flex flex-col md:flex-row gap-0 md:gap-2 md:items-center'>
               <p className='text-sm md:text-base'>Sort By:</p>
               <ListBox sort={sort} setSort={setSort} />
             </div>
           </div>
 
-         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center'>
-  {filteredJobs.map((job) => (
-    <JobCard job={job} key={job.id} />
-  ))}
-</div>
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center'>
+            {filteredJobs.map((job) => (
+              <JobCard job={job} key={job.id} />
+            ))}
+          </div>
           <div className='w-full flex items-center justify-center pt-16'>
             <Stack spacing={2}>
-            <Pagination
-  count={filteredTotalPages}
-  page={currentPage}
-  onChange={handlePageChange}
-  color="primary"
-/>
+              <Pagination
+                count={filteredTotalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+              />
             </Stack>
           </div>
         </div>

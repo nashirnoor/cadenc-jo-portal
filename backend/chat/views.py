@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from rest_framework import generics
 from .models import ChatMessage
+from rest_framework.views import APIView
+from rest_framework import status
 
 from rest_framework import viewsets
 from .models import ChatMessage
@@ -24,6 +26,29 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return ChatMessage.objects.filter(sender=user) | ChatMessage.objects.filter(receiver=user)
 
+class SendMessageView(APIView):
+    def post(self, request):
+        sender = request.user
+        receiver_id = request.data.get('receiver_id')
+        content = request.data.get('message', '')
+        file = request.FILES.get('file')
+        image = request.FILES.get('image')
+
+        try:
+            receiver = User.objects.get(id=receiver_id)
+        except User.DoesNotExist:
+            return Response({"error": "Receiver not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        message = ChatMessage.objects.create(
+            sender=sender,
+            receiver=receiver,
+            content=content,
+            file=file,
+            image=image
+        )
+
+        serializer = MessageSerializer(message, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated

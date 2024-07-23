@@ -21,8 +21,15 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
         await self.accept()
 
     @database_sync_to_async
-    def save_message(self, sender, receiver, content):
-        ChatMessage.objects.create(sender=sender, receiver=receiver, content=content)
+    def save_message(self, sender, receiver, content, file=None, image=None):
+        message = ChatMessage.objects.create(
+            sender=sender,
+            receiver=receiver,
+            content=content,
+            file=file,
+            image=image
+        )
+        return message
 
     @database_sync_to_async
     def get_user(self, user_id):
@@ -33,7 +40,7 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         data = json.loads(text_data)
-        message = data["message"]
+        message = data.get("message", "")
         sender = self.scope['user']
         receiver_id = int(self.scope['url_route']['kwargs']['id'])
         receiver = await self.get_user(receiver_id)
@@ -44,14 +51,18 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
             }))
             return
 
-        await self.save_message(sender, receiver, message)
+        saved_message = await self.save_message(sender, receiver, message)
+        file_url = self.scope['request'].build_absolute_uri(saved_message.file.url) if saved_message.file else None
+        image_url = self.scope['request'].build_absolute_uri(saved_message.image.url) if saved_message.image else None
 
         await self.channel_layer.group_send(
-            self.room_group_name,
+         self.room_group_name,
             {
                 "type": "chat_message",
                 "message": message,
-                "user_id": sender.id
+                "user_id": sender.id,
+                "file_url": file_url,
+                "image_url": image_url,
             }
         )
 
@@ -67,5 +78,7 @@ class PersonalChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "message": message,
             "sent": event['user_id'] == self.scope['user'].id,
-            "date": timestamp
+            "date": timestamp,
+            "file_url": event.get('file_url'),
+            "image_url": event.get('image_url'),
         }))

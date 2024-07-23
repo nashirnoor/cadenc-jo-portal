@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import Header from './RecruiterHeader';
 import Footer from '../users/components/Footer';
+import { useNavigate } from 'react-router-dom';
+import fileDownload from "js-file-download";
 
 
 const Applicants = () => {
@@ -10,6 +12,11 @@ const Applicants = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { jobId } = useParams();
+    const navigate = useNavigate();
+
+    const handleStartChat = (applicantId) => {
+      navigate(`/chat/${applicantId}`);
+  };
   
     useEffect(() => {
       const fetchApplicants = async () => {
@@ -20,6 +27,7 @@ const Applicants = () => {
               'Authorization': `Bearer ${jwt_a}`,
             }
           });
+          console.log(response.data)
           setApplicants(response.data);
         } catch (err) {
           setError(err.message);
@@ -31,51 +39,33 @@ const Applicants = () => {
       fetchApplicants();
     }, [jobId]);
   
-    const handleDownload = async (applicationId) => {
-        console.log(`Attempting to download resume for application ID: ${applicationId}`);
-        try {
-          const jwt_a = JSON.parse(localStorage.getItem('access'));
-          
-          const response = await axios.get(
-            `http://localhost:8000/api/v1/auth/download-resume/${applicationId}/`,
-            {
-              headers: {
-                'Authorization': `Bearer ${jwt_a}`,
-              },
-              responseType: 'blob',
-            }
-          );
-      
-          // Check if the response is actually a PDF
-          if (response.headers['content-type'] === 'application/pdf') {
-            const file = new Blob([response.data], { type: 'application/pdf' });
-            const fileURL = URL.createObjectURL(file);
-            const link = document.createElement('a');
-            link.href = fileURL;
-            link.download = `resume_${applicationId}.pdf`;
-            link.click();
-            URL.revokeObjectURL(fileURL);
+    const handleDownload = async (resumeUrl) => {
+      try {
+          if (resumeUrl) {
+              const response = await fetch(resumeUrl);
+              console.log(response)
+
+              if (!response.ok) {
+                  throw new Error("Error while fetching CV using URL");
+              }
+
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', 'resume.pdf');
+              document.body.appendChild(link);
+              link.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(link);
           } else {
-            // If it's not a PDF, it might be an error message
-            const reader = new FileReader();
-            reader.onload = function() {
-              console.error("Server response:", this.result);
-              alert("Error: " + this.result);
-            };
-            reader.readAsText(response.data);
+              console.error("ERROR: Invalid CV URL");
           }
-        } catch (err) {
-            console.error("Error downloading file:", err);
-            if (err.response) {
-              console.log("Error response status:", err.response.status);
-              console.log("Error response headers:", err.response.headers);
-              console.log("Error response data:", err.response.data);
-              alert(`Error: ${err.response.data.error || "Unknown error occurred"}`);
-            } else {
-              alert("Network error occurred. Please try again later.");
-            }
-          }
-        }
+      } catch (error) {
+          console.error("ERROR: Failed to download PDF", error);
+      }
+  };
+          
   
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -97,6 +87,8 @@ const Applicants = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Relocate</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Immediate Joinee</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Resume</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Message</th>
+
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -110,15 +102,23 @@ const Applicants = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{applicant.is_willing_to_relocate ? 'Yes' : 'No'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{applicant.is_immediate_joinee ? 'Yes' : 'No'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-sky-700">
-                        {applicant.resume_url ? (
-                          <button 
-                            onClick={() => handleDownload(applicant.id)} 
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            Download resume
-                          </button>
-                        ) : 'No resume'}
-                      </td>
+                                            {applicant.resume_url ? (
+                                                <button 
+                                                    onClick={() => handleDownload(applicant.resume_url)} 
+                                                    className="text-blue-600 hover:text-blue-800"
+                                                >
+                                                    Download resume
+                                                </button>
+                                            ) : 'No resume'}
+                                        </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-sky-700">
+                                            <button 
+                                                onClick={() => handleStartChat(applicant.id)}
+                                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                                            >
+                                                Start Chat
+                                            </button>
+                                        </td>
                     </tr>
                   ))}
                 </tbody>

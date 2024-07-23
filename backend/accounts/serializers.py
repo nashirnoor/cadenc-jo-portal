@@ -411,6 +411,8 @@ class JobSerializer(serializers.ModelSerializer):
 
 from rest_framework import serializers
 from .models import UserProfile
+from .models import Education, Experience
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     skills = SkillSerializer(many=True, read_only=True)
@@ -433,7 +435,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
-from .models import Education, Experience
 
 class EducationSerializer(serializers.ModelSerializer):
     class Meta:

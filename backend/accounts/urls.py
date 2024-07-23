@@ -3,7 +3,7 @@ from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthent
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from accounts import views
-from chat.views import get_chat_history
+from chat.views import get_chat_history,SendMessageView
 
 
 
@@ -53,9 +53,16 @@ urlpatterns = [
     path('company-jobs/<int:company_id>/', CompanyJobsView.as_view(), name='company-jobs'),
     path('api/jobs/<int:job_id>/suggested/', suggested_jobs, name='suggested-jobs'),
     path('education/', CreateEducationView.as_view(), name='create-education'),
+    path('education/<int:pk>/', CreateEducationView.as_view(), name='delete-education'),
     path('experience/', CreateExperienceView.as_view(), name='create-experience'),
+    path('experience/<int:pk>/', CreateExperienceView.as_view(), name='experience-detail'),
+
     path('all-users/', AllUserListView.as_view(), name='user-list'),
     path('chat/history/<int:user_id>/', get_chat_history, name='chat_history'),
+    path('user/<uuid:user_id>/', views.get_user_details, name='user_details'),
+    path('chat/send/', SendMessageView.as_view(), name='send_message'),
+
+
 
 
 

@@ -67,7 +67,6 @@ const Landing = () => {
             <Header />
             <LandingBody/>
             {/* nav */}
-            {/* <hr className='mx-28 lg:mx-28 border-[1px]' /> */}
           
             {/* footer */}
            <Footer />

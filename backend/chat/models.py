@@ -13,7 +13,8 @@ class ChatMessage(models.Model):
     content = models.CharField(max_length=1000)
     is_read = models.BooleanField(default=False)
     date = models.DateTimeField(auto_now_add=True)
-
+    file = models.FileField(upload_to='chat_files/', null=True, blank=True)
+    image = models.ImageField(upload_to='chat_images/', null=True, blank=True)
 
     class Meta:
         ordering = ['date']
@@ -29,7 +30,6 @@ class ChatMessage(models.Model):
     @property
     def receiver_profile(self):
         return self.receiver
-
 
 
     

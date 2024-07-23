@@ -29,7 +29,6 @@ const UploadJob = () => {
 
   let jwt_access = localStorage.getItem('access');
   jwt_access = JSON.parse(jwt_access);
-  print(jwt_access)
   const fetchSkills = async () => {
     try {
       const response = await axios.get(`http://localhost:8000/api/v1/auth/skills/?search=${searchTerm}`, {
