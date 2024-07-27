@@ -13,6 +13,35 @@ const ExperienceForm = () => {
     role: ''
   });
 
+  const [errors, setErrors] = useState({
+    start_date: '',
+    end_date: ''
+  });
+
+  const validateDates = () => {
+    let valid = true;
+    const today = new Date().toISOString().split('T')[0];
+    let newErrors = { start_date: '', end_date: '' };
+
+    if (formData.start_date > today) {
+      newErrors.start_date = 'Start date cannot be in the future.';
+      valid = false;
+    }
+
+    if (formData.end_date > today) {
+      newErrors.end_date = 'End date cannot be in the future.';
+      valid = false;
+    }
+
+    if (formData.start_date && formData.end_date && formData.start_date > formData.end_date) {
+      newErrors.start_date = 'Start date cannot be after end date.';
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -20,6 +49,10 @@ const ExperienceForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validateDates()) {
+      return;
+    }
+
     let jwt_access = localStorage.getItem('access');
     jwt_access = JSON.parse(jwt_access);
     axios.post('http://localhost:8000/api/v1/auth/experience/', formData, {
@@ -98,7 +131,7 @@ const ExperienceForm = () => {
             <div className="mb-4">
               <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
                 Start Date
-              </label>
+                </label>
               <input
                 id="start_date"
                 name="start_date"
@@ -107,6 +140,7 @@ const ExperienceForm = () => {
                 onChange={handleChange}
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               />
+              {errors.start_date && <p className="text-red-500 text-sm mt-1">{errors.start_date}</p>}
             </div>
             <div className="mb-4">
               <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
@@ -120,6 +154,7 @@ const ExperienceForm = () => {
                 onChange={handleChange}
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               />
+              {errors.end_date && <p className="text-red-500 text-sm mt-1">{errors.end_date}</p>}
             </div>
             <div className="mb-4">
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">

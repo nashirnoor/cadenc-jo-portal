@@ -13,30 +13,60 @@ const EducationForm = ({ onSubmit, onSkip }) => {
     end_date: ''
   });
 
+  const [errors, setErrors] = useState({
+    startDate: '',
+    endDate: ''
+  });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    setErrors({ ...errors, [name]: '' });
+  };
+
+  const validateDates = () => {
+    const { start_date, end_date } = formData;
+    const today = new Date().toISOString().split('T')[0];
+    let isValid = true;
+
+    if (start_date > today) {
+      setErrors(prev => ({ ...prev, startDate: 'Start date cannot be in the future' }));
+      isValid = false;
+    }
+
+    if (end_date > today) {
+      setErrors(prev => ({ ...prev, endDate: 'End date cannot be in the future' }));
+      isValid = false;
+    }
+
+    if (start_date && end_date && start_date > end_date) {
+      setErrors(prev => ({ ...prev, endDate: 'End date cannot be before start date' }));
+      isValid = false;
+    }
+
+    return isValid;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!validateDates()) {
+      return;
+    }
+
     let jwt_access = localStorage.getItem('access');
     jwt_access = JSON.parse(jwt_access);
     
-    // Get the user data from local storage
     const userData = JSON.parse(localStorage.getItem('user'));
-    
-    // Add the user email to the form data
-    // We'll use this on the backend to identify the user
     const dataToSend = { ...formData, user_email: userData.email };
-  
+
     axios.post('http://localhost:8000/api/v1/auth/education/', dataToSend, {
       headers: {
         'Authorization': `Bearer ${jwt_access}`
       }
     })
     .then(response => {
-      console.log(response.data)
+      console.log(response.data);
       navigate('/landing');
     })
     .catch(error => {
@@ -96,31 +126,33 @@ const EducationForm = ({ onSubmit, onSkip }) => {
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
-            Start Date
-          </label>
-          <input
-            id="start_date"
-            name="start_date"
-            type="date"
-            value={formData.start_date}
-            onChange={handleChange}
-            className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-          />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
-            End Date
-          </label>
-          <input
-            id="end_date"
-            name="end_date"
-            type="date"
-            value={formData.end_date}
-            onChange={handleChange}
-            className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-          />
-        </div>
+        <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
+                Start Date
+              </label>
+              <input
+                id="start_date"
+                name="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              />
+              {errors.startDate && <p className="text-red-500 text-sm mt-2">{errors.startDate}</p>}
+            </div>
+            <div className="mb-4">
+              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
+                End Date
+              </label>
+              <input
+                id="end_date"
+                name="end_date"
+                type="date"
+                value={formData.end_date}
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              />
+              {errors.endDate && <p className="text-red-500 text-sm mt-2">{errors.endDate}</p>}
+            </div>
       </div>
 
       <div className="flex items-center justify-between">

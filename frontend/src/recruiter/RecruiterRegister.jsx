@@ -70,9 +70,9 @@ const RecruiterRegister = () => {
 
   return (
     <div className="flex w-full h-screen justify-center items-center">
-      <div className="w-full flex items-center justify-center lg:w-1/2">
+      <div className="flex items-center justify-center lg:w-1/2">
         <div className="bg-white px-10 py-20 rounded-3xl border-2 border-gray-200">
-          <h3 className="text-5xl font-semibold pl-5">Recruiter Register</h3>
+          <h3 className="text-4xl font-semibold pl-5">Recruiter Signup</h3>
           <form onSubmit={handleSubmit}>
             <div className="mt-8">
               <div>

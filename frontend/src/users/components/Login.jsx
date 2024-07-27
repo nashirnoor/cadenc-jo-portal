@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Link, json, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-//////////////////
+
 const Login = () => {
     const navigate = useNavigate();
     const [logindata, setLoginData] = useState({
@@ -17,6 +17,36 @@ const Login = () => {
         setLoginData({ ...logindata, [e.target.name]: e.target.value });
         setError(""); // Reset error when user starts typing
     }
+
+    const handleSignInWithGoogle = async (response) => {
+        const payload = response.credential;
+        console.log("Google OAuth payload:", payload); // Log the token
+
+        const server_res = await axios.post("http://localhost:8000/google/", { 'access_token': payload });
+        console.log(server_res.data, 'server');
+        const user = {
+            "email": server_res.data.email,
+            "names": server_res.data.full_name
+        };
+        print(server_res.status)
+        if (server_res.status === 200) {
+            console.table(server_res.data);
+            localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("user_token", JSON.stringify(server_res.data.tokens));
+            navigate("/landing");
+            toast.success("Login successful");
+        }
+    };
+    useEffect(() => {
+        google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_CLIENT_ID,
+            callback: handleSignInWithGoogle,
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("signInDiv"),
+            { theme: "outline", size: "large", text: "continue_with", width: "350" }
+        );
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -161,6 +191,13 @@ const Login = () => {
                                 </svg>
                                 Sign in with Google
                             </button>
+                              {/* <div className="googleContainer"
+                                id='signInDiv'
+                            >
+                                <button>
+                                    Sign up with Google
+                                </button>
+                            </div> */}
                         </div>
                         <div className="mt-6 flex justify-center items-center">
                             <p className="font-medium text-base">Don't have an account?</p>

@@ -12,6 +12,11 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from .utils import send_normal_email
 from .utils import Google, register_social_user
 from .models import CompanyProfile,Skill
+from django.contrib.auth import authenticate
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework import serializers
+from .models import UserProfile
+from .models import Education, Experience
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
@@ -60,10 +65,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             )
             return user
         
-class UserSerialzier(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
+
 
 class RecruiterRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
@@ -247,28 +249,6 @@ class GoogleSignInSerializer(serializers.Serializer):
 
         return register_social_user(provider, email, first_name)
 
-# class GoogleSignInSerializer(serializers.Serializer):
-#     access_token=serializers.CharField(min_length=6)
-
-
-#     def validate_access_token(self, access_token):
-#         user_data=Google.validate(access_token)
-#         try:
-#             user_data['sub']
-            
-#         except:
-#             raise serializers.ValidationError("this token has expired or invalid please try again")
-        
-#         if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
-#                 raise AuthenticationFailed('Could not verify user.')
-
-#         user_id=user_data['sub']
-#         email=user_data['email']
-#         first_name=user_data['given_name']
-#         # last_name=user_data['family_name']
-#         provider='google'
-
-        # return register_social_user(provider, email, first_name  )
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -281,10 +261,7 @@ class RecruiterListSerializer(serializers.ModelSerializer):
         model = Recruiter
         fields = ['id', 'email', 'first_name', 'company_name', 'is_staff', 'is_superuser', 'is_verified', 'is_active', 'date_joined', 'last_login','user_type']
 
-# class CompanyProfileSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = CompanyProfile
-#         fields = '__all__'
+
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
     job_count = serializers.SerializerMethodField()
@@ -306,15 +283,6 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
-
-
-
-
-  
-
-# serializers.py
-from django.contrib.auth import authenticate
-from rest_framework.exceptions import AuthenticationFailed
 
 class AdminLoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=6)
@@ -405,13 +373,6 @@ class JobSerializer(serializers.ModelSerializer):
             job.skills.set(Skill.objects.filter(id__in=skill_ids))
         return job
 
-       
-
-
-
-from rest_framework import serializers
-from .models import UserProfile
-from .models import Education, Experience
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

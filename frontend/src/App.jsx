@@ -35,6 +35,7 @@ import Applicants from './recruiter/Applicants';
 import CompanyProfileUser from './users/components/CompanyProfileUser';
 import ChatPage from './users/components/Chat/ChatPage';
 // import PageChat from './users/components/Chat/PageChat';
+import Dashboard from './admin/components/Dashboard';
 
 
 
@@ -75,6 +76,8 @@ function App() {
 
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+
           <Route path="/admin-home" element={<AdminHome />} />
           <Route path='/recruiter-list' element={<RecruiterList/>}/>
           <Route path='/recruiter-approval' element={<AdminRecruiterApproval/>} />
@@ -104,24 +107,12 @@ function App() {
 
         {/* <Route path="/chat/:id" element={<ChatPage />} /> */}
 
-        {/* <Route exact path="/chat">
-          <ChatList userId={userId} accessToken={accessToken} />
-        </Route>
-        <Route path="/chat/:chatWithId">
-          {({ match }) => (
-            <Chat
-              userId={userId}
-              chatWithId={match.params.chatWithId}
-              accessToken={accessToken}
-            />
-          )}
-        </Route> */}
               {/* <Route path="/chat" element={<ChatPage />} /> */}
               <Route path="/company-profile-user/:id" element={<CompanyProfileUser />} />
 
               {/* <Route path="/chat/:id" element={<ChatPage />} /> */}
                {/* <Route path="/chat" element={<ChatPage/>} /> */}
-               <Route path="/chat/:userId?" element={<ChatPage />} />
+               <Route path="/chat/:id" element={<ChatPage />} />
 
 
 

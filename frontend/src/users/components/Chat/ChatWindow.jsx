@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const ChatWindow = ({ selectedUser, messages, setMessages }) => {
@@ -9,72 +10,92 @@ const ChatWindow = ({ selectedUser, messages, setMessages }) => {
     const [selectedImage, setSelectedImage] = useState(null);
     const fileInputRef = useRef(null);
     const imageInputRef = useRef(null);
-
-    const connectWebSocket = () => {
-        let jwt_a = localStorage.getItem('access');
-        jwt_a = JSON.parse(jwt_a);
-
-        const ws = new WebSocket(`ws://localhost:8000/ws/chat/${selectedUser.id}/?token=${jwt_a}`);
-
-        ws.onopen = () => {
-            console.log('Connected to WebSocket server');
-        };
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('Received message:', data); // Add this line for debugging
-            fetchChatHistory();
-            setMessages((prevMessages) => [...prevMessages, {
-                sender: data.sent ? 'You' : selectedUser.first_name,
-                text: data.message,
-                date: data.date || new Date().toISOString(),
-                file: data.file_url,
-                image: data.image_url
-            }]);
-        };
-
-        ws.onclose = () => {
-            console.log('Disconnected from WebSocket server');
-        };
-
-        socketRef.current = ws;
-    };
+    const { id: roomId } = useParams();
+    const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        fetchChatHistory();
-        connectWebSocket();
+        const connectWebSocket = () => {
+            let jwt_a = localStorage.getItem('access');
+            jwt_a = JSON.parse(jwt_a);
+
+            const ws = new WebSocket(`ws://localhost:8000/ws/chat/${roomId}/?token=${jwt_a}`);
+
+            ws.onopen = () => {
+                console.log('Connected to WebSocket server');
+                setIsConnected(true);
+            };
+
+            ws.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Received message:', data);
+                setMessages((prevMessages) => [...prevMessages, {
+                  sender: data.sent ? 'You' : selectedUser.first_name,
+                  text: data.message,
+                  date: data.date || new Date().toISOString(),
+                  file: data.file_url,
+                  image: data.image_url
+                }]);
+              
+
+            if (!data.sent) {
+                try {
+                  const jwt_a = JSON.parse(localStorage.getItem('access'));
+                  await axios.post(`http://localhost:8000/api/v1/auth/mark-messages-as-read/${roomId}/`, {}, {
+                    headers: {
+                      'Authorization': `Bearer ${jwt_a}`,
+                    }
+                  });
+                } catch (error) {
+                  console.error('Error marking message as read:', error);
+                }
+              }
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected from WebSocket server');
+                setIsConnected(false);
+            };
+
+            return ws;
+        };
+
+        socketRef.current = connectWebSocket();
 
         return () => {
             if (socketRef.current) {
                 socketRef.current.close();
             }
         };
-    }, [selectedUser]);
+    }, [roomId, selectedUser, setMessages]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const fetchChatHistory = async () => {
-        try {
-            let jwt_a = localStorage.getItem('access');
-            jwt_a = JSON.parse(jwt_a);
-            const response = await axios.get(`http://localhost:8000/api/v1/auth/chat/history/${selectedUser.id}/`, {
-                headers: {
-                    'Authorization': `Bearer ${jwt_a}`,
-                }
-            });
-            setMessages(response.data.map(msg => ({
-                sender: msg.sender === selectedUser.id ? selectedUser.first_name : 'You',
-                text: msg.content,
-                date: msg.date,
-                file: msg.file_url,
-                image: msg.image_url
-            })));
-        } catch (error) {
-            console.error('Error fetching chat history:', error);
-        }
-    };
+    useEffect(() => {
+        const fetchChatHistory = async () => {
+            try {
+                let jwt_a = localStorage.getItem('access');
+                jwt_a = JSON.parse(jwt_a);
+                const response = await axios.get(`http://localhost:8000/api/v1/auth/chat/history/${selectedUser.id}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwt_a}`,
+                    }
+                });
+                setMessages(response.data.map(msg => ({
+                    sender: msg.sender === selectedUser.id ? selectedUser.first_name : 'You',
+                    text: msg.content,
+                    date: msg.date,
+                    file: msg.file_url,
+                    image: msg.image_url
+                })));
+            } catch (error) {
+                console.error('Error fetching chat history:', error);
+            }
+        };
+
+        fetchChatHistory();
+    }, [selectedUser, setMessages,messages]);
 
     const handleSendMessage = async () => {
         if ((newMessage.trim() !== '' || selectedFile || selectedImage) && socketRef.current) {
@@ -152,7 +173,7 @@ const ChatWindow = ({ selectedUser, messages, setMessages }) => {
                 <h2 className="text-xl font-semibold">{selectedUser.first_name}</h2>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-            {messages.map((message, index) => (
+                {messages.map((message, index) => (
                     <div key={index} className={`flex ${message.sender === 'You' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg shadow ${
                             message.sender === 'You' ? 'bg-indigo-500 text-white' : 'bg-white text-gray-800'
@@ -236,3 +257,9 @@ const ChatWindow = ({ selectedUser, messages, setMessages }) => {
 };
 
 export default ChatWindow;
+
+
+
+
+
+

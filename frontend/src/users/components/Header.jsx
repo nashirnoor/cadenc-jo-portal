@@ -6,6 +6,7 @@ import axiosInstance from '../utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Menu, X, User, Settings, LogOut } from 'lucide-react';
+import axios from 'axios';
 
 const CustomButton = styled(Button)({
   backgroundColor: 'black',
@@ -19,12 +20,32 @@ const Header = () => {
   const dropdownRef = useRef(null);
   const user = JSON.parse(localStorage.getItem('user'));
   const jwt_access = localStorage.getItem('access');
+  const profileData = JSON.parse(localStorage.getItem('profileData'));
+
+
+  const fetchProfileData = async () => {
+    try {
+      const jwt_access = JSON.parse(localStorage.getItem('access'));
+      const response = await axios.get('http://localhost:8000/api/v1/auth/user-profile/', {
+        headers: {
+          'Authorization': `Bearer ${jwt_access}`
+        }
+      });
+      console.log(response.data);
+      localStorage.setItem('profileData', JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+    }
+  };
+  
 
   useEffect(() => {
     if (!jwt_access && !user) {
       navigate("/login");
     } else {
       getSomeData();
+      fetchProfileData();
+
     }
 
     const handleClickOutside = (event) => {
@@ -57,6 +78,8 @@ const Header = () => {
       localStorage.removeItem('access');
       localStorage.removeItem('refresh');
       localStorage.removeItem('user');
+      localStorage.removeItem('profileData');
+
       navigate('/login');
       toast.success("Logout successful");
     } catch (error) {
@@ -92,8 +115,8 @@ const Header = () => {
       <div className="hidden md:flex items-center">
         {jwt_access && user ? (
           <div className="relative" ref={dropdownRef}>
-            <img
-              src="/images/profile-user.png"
+              <img
+              src={profileData?.photo || "/images/profile-user.png"}
               alt="profile"
               className="h-11 w-11 cursor-pointer rounded-full"
               onClick={toggleDropdown}
@@ -103,9 +126,9 @@ const Header = () => {
                 <Link to="/user-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   <User className="inline-block mr-2" size={18} /> Profile
                 </Link>
-                <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                {/* <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   <Settings className="inline-block mr-2" size={18} /> Settings
-                </Link>
+                </Link> */}
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

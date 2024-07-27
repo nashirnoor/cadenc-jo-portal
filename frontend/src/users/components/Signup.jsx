@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react'
-import { useState } from 'react'; 
-import { Link } from 'react-router-dom'; 
+import React from 'react'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 
@@ -16,22 +16,12 @@ const Signup = () => {
         password2: ""
     });
 
-  
+
 
     const handleOnchange = (e) => {
         setFormdata({ ...formdata, [e.target.name]: e.target.value });
     };
 
-    useEffect(() => {
-        google.accounts.id.initialize({
-            client_id:import.meta.env.VITE_CLIENT_ID,
-            callback: handleSignInWithGoogle,
-        });
-        google.accounts.id.renderButton(
-            document.getElementById("signInDiv"),
-            { theme: "outline", size: "large", text: "continue_with", width: "350" }
-        );
-    }, []);
 
     const [error, setError] = useState('');
 
@@ -70,25 +60,6 @@ const Signup = () => {
             }
         } catch (error) {
             setError(error.response.data.email || error.response.data.phone_number || 'An error occurred');
-          }
-    };  
-    const handleSignInWithGoogle = async (response) => {
-        const payload = response.credential;
-        console.log("Google OAuth payload:", payload); // Log the token
-
-        const server_res = await axios.post("http://localhost:8000/google/", { 'access_token': payload });
-        console.log(server_res.data, 'server');
-        const user = {
-            "email": server_res.data.email,
-            "names": server_res.data.full_name
-        };
-        print(server_res.status)
-        if (server_res.status === 200) {
-            console.table(server_res.data);
-            localStorage.setItem("user", JSON.stringify(user));
-            localStorage.setItem("user_token", JSON.stringify(server_res.data.tokens));
-            navigate("/landing");
-            toast.success("Login successful");
         }
     };
 
@@ -169,26 +140,26 @@ const Signup = () => {
                                 >
                                     Sign up
                                 </button>
-                            
-                            </div>
-                            <div className="googleContainer"
-                                    id='signInDiv'
-                                    >
-                                        <button>
-                                    Sign up with Google
-                                    </button>
-                                    </div>
 
-                                <div className="mt-4 flex flex-col items-center">
+                            </div>
+                            {/* <div className="googleContainer"
+                                id='signInDiv'
+                            >
+                                <button>
+                                    Sign up with Google
+                                </button>
+                            </div> */}
+
+                            <div className="mt-4 flex flex-col items-center">
                                 <div className="flex items-center">
                                     <p className="font-medium text-base">Have an account?</p>
                                     <div className="text-violet-500 text-base font-medium ml-2">
                                         <Link to="/login">Sign in</Link>
                                     </div>
-                                    
-                          
+
+
                                 </div>
-                                <div className="text-violet-500 text-base font-medium ml-2 mt-2">
+                                <div className="text-violet-500 text-base font-medium ml-2 mt-2 ">
                                     <Link to="/recruiter-register">Register as Recruiter</Link>
                                 </div>
                             </div>

@@ -1,17 +1,15 @@
 from django.urls import path
-from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView, PendingRecruitersView,check_company_profile,SkillListCreateAPIView,SkillDeleteAPIView,CheckUserProfileView, CreateUserProfileView,UserProfileView,UpdateUserProfileView,apply_job,get_job_applicants,download_resume,JobPostedList,CompanyListView,CompanyProfileDetailView,CompanyJobsView,suggested_jobs,CreateEducationView, CreateExperienceView,AllUserListView
+from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView, PendingRecruitersView,check_company_profile,SkillListCreateAPIView,SkillDeleteAPIView,CheckUserProfileView, CreateUserProfileView,UserProfileView,UpdateUserProfileView,apply_job,get_job_applicants,download_resume,JobPostedList,CompanyListView,CompanyProfileDetailView,CompanyJobsView,suggested_jobs,CreateEducationView, CreateExperienceView,user_stats
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from accounts import views
-from chat.views import get_chat_history,SendMessageView
+from chat.views import get_chat_history,SendMessageView,create_chat_room,get_chat_room,get_chat_rooms,get_unread_message_counts,mark_messages_as_read
 
 
 
 
 urlpatterns = [
     path('admin/logout/', LogoutView.as_view(), name='admin_logout'),
-
-    # path('google/', GoogleOauthSignInview.as_view(), name='google'),
     path('register/', RegisterUserView.as_view(), name='register'),
     path('verify-email/', VerifyUserEmail.as_view(), name='verify'),
     path('login/', LoginUserView.as_view(), name='login'),
@@ -29,7 +27,6 @@ urlpatterns = [
     path('jobs/create/', JobCreateView.as_view(), name='job-create'),
     path('admin/recruiters/pending/', PendingRecruitersView.as_view(), name='pending_recruiters'),
     path('admin/recruiters/pending/<int:recruiter_id>/', PendingRecruitersView.as_view(), name='approve_reject_recruiter'),
-    # path('create-company-profile/', create_company_profile, name='create-company-profile'),
     path('company-profile/', create_company_profile, name='create_company_profile'),
     path('company-profile/update/<int:pk>/', update_company_profile, name='update_company_profile'),
     path('company-profile-get/', get_company_profile, name='get_company_profile'),
@@ -56,29 +53,16 @@ urlpatterns = [
     path('education/<int:pk>/', CreateEducationView.as_view(), name='delete-education'),
     path('experience/', CreateExperienceView.as_view(), name='create-experience'),
     path('experience/<int:pk>/', CreateExperienceView.as_view(), name='experience-detail'),
-
-    path('all-users/', AllUserListView.as_view(), name='user-list'),
     path('chat/history/<int:user_id>/', get_chat_history, name='chat_history'),
-    path('user/<uuid:user_id>/', views.get_user_details, name='user_details'),
     path('chat/send/', SendMessageView.as_view(), name='send_message'),
+    path('create-chat-room/', create_chat_room, name='create_chat_room'),
+    path('chat-room/<int:room_id>/', get_chat_room, name='get_chat_room'),
+    path('chat-rooms/', get_chat_rooms, name='get_chat_rooms'),
+    path('api/user-stats/', user_stats, name='user_stats'),
+    path('unread-message-counts/', get_unread_message_counts, name='unread-message-counts'),
+    path('mark-messages-as-read/<int:room_id>/', mark_messages_as_read, name='mark-messages-as-read'),
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-    # path('admin/logout/', AdminLogoutApiView.as_view(), name='admin-logout'),
 
 ]

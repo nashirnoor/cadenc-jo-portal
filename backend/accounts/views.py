@@ -12,7 +12,7 @@ from .models import User,Recruiter
 from rest_framework.generics import GenericAPIView
 from .serializers import UserListSerializer, RecruiterListSerializer
 from rest_framework.permissions import IsAdminUser
-from rest_framework import generics,viewsets
+from rest_framework import generics
 from rest_framework.decorators import action
 from .models import Skill
 from rest_framework.decorators import api_view, permission_classes
@@ -20,11 +20,64 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.pagination import PageNumberPagination
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.conf import settings
+from .serializers import RecruiterListSerializer 
+from rest_framework.views import APIView
+from .utils import send_normal_email  
+from rest_framework.permissions import BasePermission
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from .models import User
+from django.db import IntegrityError
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import UserProfile, Skill
+from .serializers import UserProfileSerializer
+import json
+from .serializers import EducationSerializer, ExperienceSerializer
+from .serializers import AdminLoginSerializer
+from rest_framework.views import APIView
+from rest_framework import generics, permissions
+from .models import Job
+from .serializers import JobSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Job
+from django.http import HttpResponse
+import requests
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+import time
+from django.core.files.storage import default_storage
+import os
+import uuid
 
 
+from django.http import JsonResponse
+from django.db.models import Count
+from .models import User
+
+def user_stats(request):
+    total_users = User.objects.count()
+    total_recruiters = User.objects.filter(user_type='recruiter').count()
+    total_normal_users = User.objects.filter(user_type='normal').count()
+    
+    # Assuming you have a Post model, otherwise remove this line
+    # total_posts = Post.objects.count()
+
+    return JsonResponse({
+        'totalUsers': total_users,
+        'totalRecruiters': total_recruiters,
+        'totalNormalUsers': total_normal_users,
+        # 'totalPosts': total_posts
+    })
 
 
-# Create your views here.
 
 class RegisterUserView(GenericAPIView):
     serializer_class = UserRegisterSerializer
@@ -42,8 +95,7 @@ class RegisterUserView(GenericAPIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-from django.core.mail import send_mail
-from django.conf import settings
+
     
 class RegisterRecruiterView(GenericAPIView):
     serializer_class = RecruiterRegisterSerializer
@@ -69,10 +121,8 @@ class RegisterRecruiterView(GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from .serializers import RecruiterListSerializer 
-from rest_framework.views import APIView
 
-from .utils import send_normal_email  # Ensure you have this import
+
 
 class PendingRecruitersView(APIView):
     permission_classes = [IsAdminUser]
@@ -173,7 +223,6 @@ class PasswordResetRequestView(GenericAPIView):
         return Response({'message':'we have sent you a link to reset your password'}, status=status.HTTP_200_OK)
 
 class PasswordResetConfirm(GenericAPIView):
-
     def get(self, request, uidb64, token):
         try:
             user_id=smart_str(urlsafe_base64_decode(uidb64))
@@ -207,7 +256,6 @@ class LogoutApiView(GenericAPIView):
     
 
     
-from rest_framework.permissions import BasePermission
 
 class IsAdminUser(BasePermission):
     def has_permission(self, request, view):
@@ -236,8 +284,6 @@ class GoogleOauthSignInview(GenericAPIView):
         return Response(data, status=status.HTTP_200_OK) 
     
     
-
-
     
 class UserPagination(PageNumberPagination):
     page_size = 5 # Number of users per page
@@ -252,24 +298,8 @@ class UserListView(generics.ListAPIView):
     def get_queryset(self):
         return User.objects.filter(user_type='normal')
     
-#all user for testing
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
-from .models import User
-from .serializers import UserSerialzier
 
-class AllUserListView(APIView):
-    def get(self, request):
-        current_user = request.user
-        chatted_users = User.objects.filter(
-            Q(sent_messages__receiver=current_user) | Q(received_messages__sender=current_user)
-        ).distinct()
-        serializer = UserSerialzier(chatted_users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerialzier
 
 class CustomPaginationrecruiter(PageNumberPagination):
     page_size = 8
@@ -283,9 +313,6 @@ class RecruiterListView(generics.ListAPIView):
     pagination_class = CustomPaginationrecruiter
 
 
-# views.py
-from .serializers import AdminLoginSerializer
-from rest_framework.views import APIView
 
 
     
@@ -307,9 +334,6 @@ class AdminHomeView(APIView):
         return Response({"message": "Welcome to the admin home page."}, status=status.HTTP_200_OK)
 
 
-from rest_framework import generics, permissions
-from .models import Job
-from .serializers import JobSerializer
 
 class JobCreateView(generics.CreateAPIView):
     serializer_class = JobSerializer
@@ -337,28 +361,6 @@ class StandardResultsSetPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
     
-
-from django.db.models import Q
-
-# @api_view(['GET'])
-# def job_list(request):
-#     job_title = request.query_params.get('job_title', '')
-#     job_location = request.query_params.get('job_location', '')
-
-#     jobs = Job.objects.all().order_by('-created_at').filter(deleted=False)
-#     print(jobs)
-
-#     if job_title:
-#         jobs = jobs.filter(job_title__icontains=job_title)
-#     if job_location:
-#         jobs = jobs.filter(job_location__icontains=job_location)
-
-#     paginator = StandardResultsSetPagination()
-#     result_page = paginator.paginate_queryset(jobs, request)
-#     serializer = JobSerializer(result_page, many=True, context={'request': request})
-#     return paginator.get_paginated_response(serializer.data)
-from operator import or_
-from functools import reduce
 
 
 
@@ -439,15 +441,13 @@ def create_company_profile(request):
     print(request.data)
     print(user.user_type)
 
-    # Check if the user is a recruiter
     if user.user_type != 'recruiter':
-        return Response({'error': 'Only recruiters can create a company profile. lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'Only recruiters can create a company profile.'}, status=status.HTTP_403_FORBIDDEN)
 
-    # Fetch the recruiter profile based on the user
     try:
-        recruiter = Recruiter.objects.get(id=user.id) # Ensure 'user' is the correct field name in the Recruiter model
+        recruiter = Recruiter.objects.get(id=user.id) 
     except Recruiter.DoesNotExist:
-        return Response({'error': 'Recruiter profile does not exist. lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll '}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Recruiter profile does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
     serializer = CompanyProfileSerializer(data=request.data)
 
@@ -566,28 +566,7 @@ class LogoutView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-from django.db import IntegrityError
 
-# class CreateJobView(APIView):
-#     def post(self, request):
-#         serializer = JobSerializer(data=request.data)
-#         if serializer.is_valid():
-#             try:
-#                 job = serializer.save(recruiter=request.user)
-#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-#             except IntegrityError as e:
-#                 print(f"IntegrityError: {str(e)}")  # Log the error
-#                 return Response(
-#                     {"error": "You have already posted a job with this title."},
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
-#         print(f"Serializer errors: {serializer.errors}")  # Log serializer errors
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     def get(self, request):
-#         jobs = Job.objects.filter(recruiter=request.user)
-#         serializer = JobSerializer(jobs, many=True)
-#         return Response(serializer.data)
 
 class CreateJobView(APIView):
     def post(self, request):
@@ -597,12 +576,12 @@ class CreateJobView(APIView):
                 job = serializer.save(recruiter=request.user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError as e:
-                print(f"IntegrityError: {str(e)}")  # Log the error
+                print(f"IntegrityError: {str(e)}")  
                 return Response(
                     {"error": "You have already posted a job with this title."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        print(f"Serializer errors: {serializer.errors}")  # Log serializer errors
+        print(f"Serializer errors: {serializer.errors}")  
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def get(self, request):
@@ -670,24 +649,12 @@ class CheckUserProfileView(APIView):
 
     def get(self, request):
         try:
-            print("Tryyyyyyy")
-            # Check if the user has a profile
             UserProfile.objects.get(user=request.user)
-            # If the profile exists, return 200 OK
             return Response(status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist:
             print("Page Doesn't exist")
-            # If the profile doesn't exist, return 204 No Content
             return Response(status=status.HTTP_204_NO_CONTENT)
-        
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from .models import UserProfile, Skill
-from .serializers import UserProfileSerializer
-import json
-from .serializers import EducationSerializer, ExperienceSerializer
+    
 
 
 class CreateUserProfileView(APIView):
@@ -810,7 +777,7 @@ class CreateExperienceView(APIView):
     
 
 class UserProfileView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
@@ -829,23 +796,6 @@ class UpdateUserProfileView(generics.UpdateAPIView):
     def get_object(self):
         return self.request.user.profile
     
-
-
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import Job
-from django.http import HttpResponse
-import requests
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-import time
-from django.core.files.storage import default_storage
-import os
-
-import uuid
-
 
 
 @api_view(['POST'])
@@ -874,47 +824,34 @@ def apply_job(request, job_id):
         'resume_url': resume_url,
     }
 
-    # Add the application to the job's applications array
     job.applications.append(application)
     job.save()
 
     return Response({'message': 'Application submitted successfully'}, status=201)
 
-from django.contrib.auth import get_user_model
 User = get_user_model()
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_job_applicants(request, job_id):
     try:
-        print(f"Fetching applicants for job ID: {job_id}")
         job = Job.objects.get(id=job_id)
-        print(f"Job found: {job}")
-
-        # Ensure each application has an 'id' field and include user details
+        
         for app in job.applications:
-            if 'id' not in app:
-                app['id'] = str(uuid.uuid4())
             user = User.objects.get(id=app['user_id'])
+            app['id'] = user.id  # Use the user's ID instead of generating a new UUID
             app['username'] = user.get_full_name
             app['phone_number'] = user.phone_number
             app['email'] = user.email
+        
         job.save()
-
+        
         return Response(job.applications, status=200)
     except Job.DoesNotExist:
-        print(f"Job with ID {job_id} not found")
         return Response({'error': 'Job not found'}, status=404)
     
-from django.shortcuts import get_object_or_404
 
     
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_user_details(request, user_id):
-    user = get_object_or_404(User, id=user_id)
-    serializer = UserSerialzier(user)
-    return Response(serializer.data)
 
 
 @api_view(['GET'])
