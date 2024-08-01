@@ -65,6 +65,7 @@ const UserProfile = () => {
 
   useEffect(() => {
     fetchExperiences();
+    
   }, []);
 
   useEffect(() => {
@@ -197,10 +198,10 @@ const UserProfile = () => {
   return (
     <>
       <Header />
-      <div className="bg-gray-100 flex items-start justify-center p-4">
+      <div className="bg-white flex items-start justify-center p-4">
         <div className="w-full max-w-[1120px] h-auto sm:h-[271px] bg-white rounded-xl shadow-lg flex flex-col sm:flex-row overflow-hidden">
           {/* Left side - Profile Photo */}
-          <div className="w-full sm:w-[271px] h-[271px] bg-gray-200 flex-shrink-0 flex items-center justify-center p-4">
+          <div className="w-full sm:w-[271px] h-[271px] bg-gray-100 flex-shrink-0 flex items-center justify-center p-4">
             <div className="w-48 h-48 rounded-full border-4 border-indigo-500 overflow-hidden">
               {profileData.photo ? (
                 <img
@@ -279,7 +280,7 @@ const UserProfile = () => {
       </div>
 
       {/* About Section */}
-      <div className="bg-gray-100 flex items-start justify-center p-4">
+      <div className="bg-white flex items-start justify-center p-4">
         <div className="w-full max-w-[1120px] bg-white rounded-xl shadow-lg p-8 relative">
           <div className="absolute top-4 right-4">
             {isEditing ? (
@@ -308,7 +309,7 @@ const UserProfile = () => {
       </div>
       {/* Experience Section */}
 
-      <div className="bg-gray-100 flex items-start justify-center p-4">
+      <div className="bg-white flex items-start justify-center p-4">
         <div className="w-full max-w-[1120px] bg-white rounded-xl shadow-lg p-8 relative">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Experience</h2>
@@ -356,7 +357,7 @@ const UserProfile = () => {
       </div>
 
      {/* Education Section */}
-<div className="bg-gray-100 flex items-start justify-center p-4">
+<div className="bg-white flex items-start justify-center p-4">
   <div className="w-full max-w-[1120px] bg-white rounded-xl shadow-lg p-8 relative">
     <div className="flex justify-between items-center mb-6">
       <h2 className="text-2xl font-bold text-gray-800">Education</h2>

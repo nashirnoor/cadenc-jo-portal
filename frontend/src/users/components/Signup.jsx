@@ -53,6 +53,7 @@ const Signup = () => {
         try {
             const res = await axios.post("http://localhost:8000/api/v1/auth/register/", formdata);
             const response = res.data;
+            console.log(res.data)
             console.log(response);
             if (res.status === 201) {
                 navigate("/otp/verify");

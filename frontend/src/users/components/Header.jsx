@@ -41,7 +41,7 @@ const Header = () => {
 
   useEffect(() => {
     if (!jwt_access && !user) {
-      navigate("/login");
+      navigate("/");
     } else {
       getSomeData();
       fetchProfileData();
@@ -80,7 +80,7 @@ const Header = () => {
       localStorage.removeItem('user');
       localStorage.removeItem('profileData');
 
-      navigate('/login');
+      navigate('/');
       toast.success("Logout successful");
     } catch (error) {
       console.error('Logout error:', error);
@@ -140,7 +140,7 @@ const Header = () => {
           </div>
         ) : (
           <div className="ml-4">
-            <Link to="/login" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-2">Login</Link>
+            <Link to="/" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-2">Login</Link>
             <Link to="/signup" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Signup</Link>
           </div>
         )}
@@ -169,7 +169,7 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className="block py-2 px-4 text-sm hover:bg-gray-200">Login</Link>
+              <Link to="/" className="block py-2 px-4 text-sm hover:bg-gray-200">Login</Link>
               <Link to="/signup" className="block py-2 px-4 text-sm hover:bg-gray-200">Signup</Link>
             </>
           )}

@@ -106,8 +106,6 @@ class RecruiterRegisterSerializer(serializers.ModelSerializer):
         )
         return recruiter
 
-
-
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=6)
     password = serializers.CharField(max_length=68, write_only=True)
@@ -133,19 +131,19 @@ class LoginSerializer(serializers.ModelSerializer):
         
         if not user.is_verified:
             raise AuthenticationFailed("Email is not verified")
+
+        if user.is_blocked:
+            raise AuthenticationFailed("Your account has been blocked. Please contact support.")
+
         user_tokens = user.tokens()
-        print(str(user_tokens.get('access')))
-        print(str(user_tokens.get('refresh')))
         return {
+            'user': user,  # Add this line
             'email': user.email,
             'full_name': user.get_full_name,
             'access_token': str(user_tokens.get('access')),
             'refresh_token': str(user_tokens.get('refresh')),
             'user_type': user.user_type
         }
-
-
-
     
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=255)
@@ -254,12 +252,12 @@ class GoogleSignInSerializer(serializers.Serializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'is_staff', 'is_superuser', 'is_verified', 'is_active', 'date_joined', 'last_login','user_type','phone_number']
+        fields = ['id', 'email', 'first_name', 'is_staff', 'is_superuser', 'is_verified', 'is_active', 'date_joined', 'last_login','user_type','phone_number','is_blocked']
 
 class RecruiterListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recruiter
-        fields = ['id', 'email', 'first_name', 'company_name', 'is_staff', 'is_superuser', 'is_verified', 'is_active', 'date_joined', 'last_login','user_type']
+        fields = ['id', 'email', 'first_name', 'company_name', 'is_staff', 'is_superuser', 'is_verified', 'is_active', 'date_joined', 'last_login','user_type','is_blocked']
 
 
 
@@ -343,7 +341,7 @@ class JobSerializer(serializers.ModelSerializer):
         
 
     def get_applicants_count(self, obj):
-        return len(obj.applications)  # Count the number of applications
+        return len(obj.applications)  
 
     def get_company_logo(self, obj):
         try:

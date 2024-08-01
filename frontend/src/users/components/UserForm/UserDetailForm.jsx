@@ -32,7 +32,6 @@ const UserDetailForm = () => {
 
   return (
     <div>
-      <h2>User Detail Form</h2>
       {step === 1 && <UserProfileForm onSubmit={handleProfileSubmit} />}
       {step === 2 && (
         <ExperienceForm onSubmit={handleExperienceSubmit} onSkip={handleSkipExperience} />

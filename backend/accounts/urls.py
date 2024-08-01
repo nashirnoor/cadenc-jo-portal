@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView, PendingRecruitersView,check_company_profile,SkillListCreateAPIView,SkillDeleteAPIView,CheckUserProfileView, CreateUserProfileView,UserProfileView,UpdateUserProfileView,apply_job,get_job_applicants,download_resume,JobPostedList,CompanyListView,CompanyProfileDetailView,CompanyJobsView,suggested_jobs,CreateEducationView, CreateExperienceView,user_stats
+from .views import RegisterUserView, VerifyUserEmail, LoginUserView, TestAuthenticationView, PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, LogoutApiView, RegisterRecruiterView,UserListView,RecruiterListView,JobListView,JobCreateView,create_company_profile,update_company_profile,get_company_profile,LogoutView, CreateJobView, PendingRecruitersView,check_company_profile,SkillListCreateAPIView,SkillDeleteAPIView,CheckUserProfileView, CreateUserProfileView,UserProfileView,UpdateUserProfileView,apply_job,get_job_applicants,download_resume,JobPostedList,CompanyListView,CompanyProfileDetailView,CompanyJobsView,suggested_jobs,CreateEducationView, CreateExperienceView,user_stats,get_notifications,mark_notifications_read,update_application_status,get_user_type,SkillUpdateAPIView,BlockUserView,UnblockUserView,BlockRecruiterView, UnblockRecruiterView,MonthlyUserStats
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from accounts import views
@@ -34,7 +34,6 @@ urlpatterns = [
     path('api/jobs/', views.job_list, name='job-list'),
     path('check-company-profile/', check_company_profile, name='check_company_profile'),
     path('skills/', SkillListCreateAPIView.as_view(), name='skill-list-create'),
-    path('skills/<int:pk>/', SkillDeleteAPIView.as_view(), name='skill-delete'),
     path('api/jobs/<int:pk>/', views.job_detail, name='job-detail'),
     path('jobs/delete/<int:job_id>/', views.delete_job, name='delete_job'),
     path('company-profile-update/', views.update_company_about, name='update_company_about'),
@@ -61,6 +60,21 @@ urlpatterns = [
     path('api/user-stats/', user_stats, name='user_stats'),
     path('unread-message-counts/', get_unread_message_counts, name='unread-message-counts'),
     path('mark-messages-as-read/<int:room_id>/', mark_messages_as_read, name='mark-messages-as-read'),
+    path('notifications/', get_notifications, name='get_notifications'),
+    path('notifications/mark-read/', mark_notifications_read, name='mark_notifications_read'),
+    path('update-application-status/', update_application_status, name='update_application_status'),
+    path('user-type/', get_user_type, name='user-type'),
+    path('skills-update/<int:pk>/', SkillUpdateAPIView.as_view(), name='skill-update'),
+    path('skills/<int:pk>/', SkillDeleteAPIView.as_view(), name='skill-delete'),
+
+    path('block-user/<int:user_id>/', BlockUserView.as_view(), name='block-user'),
+    path('unblock-user/<int:user_id>/', UnblockUserView.as_view(), name='unblock-user'),
+
+    path('block-recruiter/<int:recruiter_id>/', BlockRecruiterView.as_view(), name='block-recruiter'),
+    path('unblock-recruiter/<int:recruiter_id>/', UnblockRecruiterView.as_view(), name='unblock-recruiter'),
+
+    #  path('user-stats/', UserStats.as_view(), name='user-stats'),
+    path('monthly-user-stats/', MonthlyUserStats.as_view(), name='monthly-user-stats'),
 
 
 

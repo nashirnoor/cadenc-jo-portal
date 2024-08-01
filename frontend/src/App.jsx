@@ -47,8 +47,8 @@ function App() {
       <Routes>
       
         {/* <Route path='/' element={<Signup/>} /> */}
-        {/* <Route path='/login' element={<Login/>} /> */}
-        <Route path="/login" element={
+        {/* <Route path='/login' make the below login element={<Login/>} /> */}
+        <Route path="/" element={
                     <ProtectedRouteRecruiter>
                         <Login />
                     </ProtectedRouteRecruiter>
@@ -58,8 +58,6 @@ function App() {
                         <Signup />
                     </ProtectedRouteRecruiter>
                 } />
-
-
 
         <Route path='/profile' element={<Profile/>} />
         <Route path='/otp/verify' element={<VerifyEmail/>} />
@@ -112,12 +110,9 @@ function App() {
 
               {/* <Route path="/chat/:id" element={<ChatPage />} /> */}
                {/* <Route path="/chat" element={<ChatPage/>} /> */}
+               <Route path="/chat" element={<ChatPage />} />
+
                <Route path="/chat/:id" element={<ChatPage />} />
-
-
-
-
-
        
       </Routes>
       <Toaster position='top-right' richColors />

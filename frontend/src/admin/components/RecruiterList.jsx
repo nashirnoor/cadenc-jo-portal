@@ -15,29 +15,48 @@ const RecruiterList = () => {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 8;
 
-  useEffect(() => {
-    const fetchRecruiters = async () => {
-      try {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-          throw new Error('No access token found');
-        }
-        const response = await axiosInstance.get(`http://localhost:8000/api/v1/auth/recruiters/?page=${page}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(response.data); // Log the response data to verify its structure
-        setRecruiters(response.data.results); // Adjust according to the actual response structure
-        setTotalPages(Math.ceil(response.data.count / itemsPerPage)); // Calculate total pages
-      } catch (error) {
-        console.error('Error fetching recruiters:', error);
-        setError('Error fetching recruiters');
-      } finally {
-        setLoading(false);
+  const fetchRecruiters = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('No access token found');
       }
-    };
+      const response = await axiosInstance.get(`http://localhost:8000/api/v1/auth/recruiters/?page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(response.data); // Log the response data to verify its structure
+      setRecruiters(response.data.results); // Adjust according to the actual response structure
+      setTotalPages(Math.ceil(response.data.count / itemsPerPage)); // Calculate total pages
+    } catch (error) {
+      console.error('Error fetching recruiters:', error);
+      setError('Error fetching recruiters');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleBlockUnblock = async (recruiterId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const endpoint = currentStatus ? 'unblock-recruiter' : 'block-recruiter';
+      await axiosInstance.post(`http://localhost:8000/api/v1/auth/${endpoint}/${recruiterId}/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Refresh the recruiter list
+      fetchRecruiters();
+    } catch (error) {
+      console.error('Error blocking/unblocking recruiter:', error);
+      setError('Error blocking/unblocking recruiter');
+    }
+  };
+
+
+  useEffect(() => {
+    
     const loaderTimer = setTimeout(() => {
       setShowLoader(false);
     }, 1000);
@@ -98,8 +117,13 @@ const RecruiterList = () => {
                   <td className="px-6 py-4">{new Date(recruiter.date_joined).toLocaleDateString()}</td>
                   <td className="px-6 py-4">{new Date(recruiter.last_login).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-right">
-                    <span className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Block</span>
-                  </td>
+                  <button
+                    onClick={() => handleBlockUnblock(recruiter.id, recruiter.is_blocked)}
+                    className={`font-medium ${recruiter.is_blocked ? 'text-green-600' : 'text-red-600'} hover:underline`}
+                  >
+                    {recruiter.is_blocked ? 'Unblock' : 'Block'}
+                  </button>
+                </td>
                 </tr>
               )) : null}
             </tbody>

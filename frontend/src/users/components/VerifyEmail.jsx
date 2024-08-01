@@ -7,7 +7,7 @@ const VerifyEmail = () => {
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(60); // 1 minute timer
+    const [timeLeft, setTimeLeft] = useState(60); 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -30,7 +30,7 @@ const VerifyEmail = () => {
                 const response = await axios.post("http://localhost:8000/api/v1/auth/verify-email/", { 'otp': otp });
                 if (response.status === 200) {
                     toast.success(response.data.message);
-                    navigate("/login");
+                    navigate("/");
                 }
             } catch (error) {
                 if (error.response && error.response.status === 400) {

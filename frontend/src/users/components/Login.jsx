@@ -116,20 +116,17 @@ const Login = () => {
             } catch (error) {
                 setIsLoading(false);
                 if (error.response) {
-                    console.error('Error response:', error.response.data);
-                    console.error('Error status:', error.response.status);
-                    console.error('Error headers:', error.response.headers);
-                    if (error.response.status === 401) {
-                        setError("Invalid email or password");
-                    } else if (error.response.status === 403) {
-                        setError("Enter valid details");
+                  if (error.response.status === 401) {
+                    setError("Invalid email or password");
+                  } else if (error.response.status === 403) {
+                    if (error.response.data.error === "Your account has been blocked. Please contact support.") {
+                      setError(error.response.data.error);
                     } else {
-                        setError("Login failed. Please try again.");
+                      setError("Enter valid details");
                     }
-                } else if (error.request) {
-                    console.error('Error request:', error.request);
-                    setError("No response from server. Please try again later.");
-                } else {
+                  } else {
+                    setError("Login failed. Please try again.");
+                  }} else {
                     console.error('Error message:', error.message);
                     setError("Login failed. Please try again.");
                 }

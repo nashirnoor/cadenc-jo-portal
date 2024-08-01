@@ -34,6 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_blocked = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)        
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
@@ -128,6 +129,13 @@ class Job(models.Model):
         ('remote', 'Remote'),
     )
 
+    APPLICATION_STATUS = (
+        ('pending', 'Pending'),
+        ('shortlisted', 'Shortlisted'),
+        ('rejected', 'Rejected'),
+        ('await', 'Await'),
+    )
+
     recruiter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='job_posts')
     job_title = models.CharField(max_length=255, verbose_name=_("Job Title"))
     job_type = models.CharField(max_length=20, choices=JOB_TYPES, verbose_name=_("Job Type"))
@@ -143,12 +151,20 @@ class Job(models.Model):
     deleted = models.BooleanField(default=False, verbose_name=_("Deleted"))  # New field
     skills = models.ManyToManyField('Skill', related_name='user_jobs', blank=True, verbose_name=_("Skills"))
     job_location_type = models.CharField(max_length=20, choices=JOB_LOCATION_TYPES, default='on_site', verbose_name=_("Job Location Type"))
+    applications = models.JSONField(default=list)
 
     class Meta:
         unique_together = ['recruiter', 'job_title']
 
     def __str__(self):
         return self.job_title
+    
+    def update_application_status(self, applicant_id, status):
+        for app in self.applications:
+            if app['id'] == applicant_id:
+                app['status'] = status
+                break
+        self.save()
     
 
 
@@ -201,3 +217,13 @@ class Experience(models.Model):
 
     def __str__(self):
         return f"{self.title} at {self.user_profile.user.email}"
+    
+# models.py
+class AdminNotification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.message

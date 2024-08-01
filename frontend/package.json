@@ -19,6 +19,7 @@
     "@stomp/stompjs": "^7.0.0",
     "axios": "^1.7.2",
     "axois": "^0.0.1-security",
+    "chart.js": "^4.4.3",
     "dayjs": "^1.11.11",
     "js-file-download": "^0.4.12",
     "jwt-decode": "^4.0.0",

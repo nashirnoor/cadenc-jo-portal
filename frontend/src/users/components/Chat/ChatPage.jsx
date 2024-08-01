@@ -9,7 +9,40 @@ const ChatPage = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [messages, setMessages] = useState([]);
     const { id: roomId } = useParams();
+    const [userType, setUserType] = useState('');
+
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // ... existing useEffect code ...
+
+        // Fetch user type
+        const fetchUserType = async () => {
+            try {
+                let jwt_a = localStorage.getItem('access');
+                jwt_a = JSON.parse(jwt_a);
+                const response = await axios.get('http://localhost:8000/api/v1/auth/user-type/', {
+                    headers: {
+                        'Authorization': `Bearer ${jwt_a}`,
+                    }
+                });
+                console.log(response.data.user_type,"kujhlkjhhhhhhhhhh")
+                setUserType(response.data.user_type);
+            } catch (error) {
+                console.error('Error fetching user type:', error);
+            }
+        };
+
+        fetchUserType();
+    }, []);
+
+    const handleBackClick = () => {
+        if (userType === 'recruiter') {
+            navigate('/recruiter-home');
+        } else {
+            navigate('/landing');
+        }
+    };
 
     const fetchChatHistory = async (roomId) => {
         try {
@@ -66,25 +99,27 @@ const ChatPage = () => {
         }
     }, [roomId]);
 
+    
+
     return (
-        <div className="flex h-screen bg-gray-100">
-            <div className="w-1/4 bg-white shadow-lg">
-                <div className="bg-indigo-600 p-4 text-white h-16" >
-                    <Link to="/landing" className="flex items-center hover:text-indigo-200 transition duration-150 ease-in-out">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Back 
-                    </Link>
+          <div className="flex h-screen bg-gray-100">
+            <div className="w-1/4 bg-white shadow-lg flex flex-col">
+                <div className="bg-indigo-600 p-4 text-white h-16 flex-shrink-0">
+                <button 
+                    onClick={handleBackClick}
+                    className="mr-4 text-white hover:text-gray-200"
+                >
+                    ← Back
+                </button>
                 </div>
-                <UserList setSelectedUser={handleUserSelect} fetchUnreadCounts={fetchUnreadCounts} />
-                </div>
-            <div className="flex-1 flex flex-col">
+                    <UserList setSelectedUser={handleUserSelect} fetchUnreadCounts={fetchUnreadCounts} />
+            </div>
+            <div className="flex-1 flex flex-col h-full">
                 {selectedUser ? (
                     <ChatWindow selectedUser={selectedUser} messages={messages} setMessages={setMessages} />
                 ) : (
                     <div className="flex items-center justify-center flex-1 bg-white text-gray-500 text-xl">
-                        {roomId ? 'Loading user...' : 'Select a user to start chatting'}
+                        Select a user to start chatting
                     </div>
                 )}
             </div>

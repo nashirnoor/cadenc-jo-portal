@@ -27,7 +27,7 @@ const CompanyProfileUser = () => {
     const [about, setAbout] = useState(companyInfo?.about || '');
 
     useEffect(() => {
-        setInfo(companies[parseInt(params?.id) - 1 ?? 0]);
+        setInfo(companies[parseInt(params?.id) - 1] ?? companies[0]);
         window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     }, [params]);
 

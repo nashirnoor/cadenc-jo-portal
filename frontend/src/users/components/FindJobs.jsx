@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { BiBriefcaseAlt2 } from "react-icons/bi";
 import { BsStars } from "react-icons/bs";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
-import Header from "../components/Header";
+import Header from './Header';
 import CustomButton from "./Custombutton";
 import ListBox from "./ListBox";
 import axios from "axios";

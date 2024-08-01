@@ -13,24 +13,26 @@ const AdminHome = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [showLoader, setShowLoader] = useState(true);
 
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`http://localhost:8000/api/v1/auth/users/?page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(response.data);
+      setUsers(response.data.results);
+      setTotalPages(Math.ceil(response.data.count / 5)); // Assuming 5 users per page
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem('access_token');
-        const response = await axios.get(`http://localhost:8000/api/v1/auth/users/?page=${page}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(response.data);
-        setUsers(response.data.results);
-        setTotalPages(Math.ceil(response.data.count / 5)); // Assuming 5 users per page
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    
 
     const loaderTimer = setTimeout(() => {
       setShowLoader(false);
@@ -45,6 +47,22 @@ const AdminHome = () => {
     setPage(value);
     setLoading(true);
     setShowLoader(true);
+  };
+
+  const handleBlockUnblock = async (userId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const endpoint = currentStatus ? 'unblock-user' : 'block-user';
+      await axios.post(`http://localhost:8000/api/v1/auth/${endpoint}/${userId}/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Refresh the user list
+      fetchUsers();
+    } catch (error) {
+      console.error('Error blocking/unblocking user:', error);
+    }
   };
 
   if (loading || showLoader) {
@@ -89,8 +107,13 @@ const AdminHome = () => {
                   <td className="px-6 py-4">{new Date(user.date_joined).toLocaleString()}</td>
                   <td className="px-6 py-4">{new Date(user.last_login).toLocaleString()}</td>
                   <td className="px-6 py-4 text-right">
-                    <span className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Block</span>
-                  </td>
+                  <button
+                    onClick={() => handleBlockUnblock(user.id, user.is_blocked)}
+                    className={`font-medium ${user.is_blocked ? 'text-green-600' : 'text-red-600'} hover:underline`}
+                  >
+                    {user.is_blocked ? 'Unblock' : 'Block'}
+                  </button>
+                </td>
                 </tr>
               ))}
             </tbody>

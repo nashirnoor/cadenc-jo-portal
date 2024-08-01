@@ -13,7 +13,6 @@ from rest_framework.generics import GenericAPIView
 from .serializers import UserListSerializer, RecruiterListSerializer
 from rest_framework.permissions import IsAdminUser
 from rest_framework import generics
-from rest_framework.decorators import action
 from .models import Skill
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -28,13 +27,11 @@ from rest_framework.views import APIView
 from .utils import send_normal_email  
 from rest_framework.permissions import BasePermission
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 from .models import User
 from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from .models import UserProfile, Skill
 from .serializers import UserProfileSerializer
 import json
@@ -44,7 +41,6 @@ from rest_framework.views import APIView
 from rest_framework import generics, permissions
 from .models import Job
 from .serializers import JobSerializer
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Job
@@ -60,7 +56,7 @@ import uuid
 
 from django.http import JsonResponse
 from django.db.models import Count
-from .models import User
+from .models import User,Job
 
 def user_stats(request):
     total_users = User.objects.count()
@@ -68,16 +64,46 @@ def user_stats(request):
     total_normal_users = User.objects.filter(user_type='normal').count()
     
     # Assuming you have a Post model, otherwise remove this line
-    # total_posts = Post.objects.count()
+    total_posts = Job.objects.count()
 
     return JsonResponse({
         'totalUsers': total_users,
         'totalRecruiters': total_recruiters,
         'totalNormalUsers': total_normal_users,
-        # 'totalPosts': total_posts
+        'totalPosts': total_posts
     })
 
 
+from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
+from django.utils import timezone
+from django.db.models import Count, functions as F
+
+class MonthlyUserStats(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        current_year = timezone.now().year
+
+        # Annotate the queryset with the month extracted from date_joined
+        monthly_data = User.objects.filter(
+            date_joined__year=current_year
+        ).annotate(
+            month=F.ExtractMonth('date_joined')
+        ).values(
+            'month'
+        ).annotate(
+            count=Count('id')
+        ).order_by('month')
+
+        # Prepare the data for the chart
+        data = [0] * 12
+        for entry in monthly_data:
+            data[entry['month'] - 1] = entry['count']
+
+        return Response(data)
+
+from .models import AdminNotification
 
 class RegisterUserView(GenericAPIView):
     serializer_class = UserRegisterSerializer
@@ -86,11 +112,16 @@ class RegisterUserView(GenericAPIView):
         user_data = request.data
         serializer = self.serializer_class(data=user_data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            user = serializer.data
-            send_code_to_user(user['email'])
+            user = serializer.save()
+            # user = serializer.data
+            AdminNotification.objects.create(
+                user=user,
+                message=f"New user registered: {user.email}"
+            )
+            send_code_to_user(user.email)
+
             return Response({
-                'data': user,
+                'data': serializer.data,
                 'message': 'Hi, thanks for signing up. A passcode has been sent to your email.'
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -104,24 +135,24 @@ class RegisterRecruiterView(GenericAPIView):
         recruiter_data = request.data
         serializer = self.serializer_class(data=recruiter_data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            recruiter = serializer.data
+            recruiter = serializer.save()
             # Notify admin
+            AdminNotification.objects.create(
+                user=recruiter,
+                message=f"New recruiter registered: {recruiter.email}"
+            )
             send_mail(
                 'New Recruiter Registration',
-                f'A new recruiter has registered with email {recruiter["email"]}. Please review and approve or reject the registration.',
+                f'A new recruiter has registered with email {recruiter.email}. Please review and approve or reject the registration.',
                 settings.DEFAULT_FROM_EMAIL,
                 [settings.ADMIN_EMAIL],
                 fail_silently=False,
             )
             return Response({
-                'data': recruiter,
+                'data': serializer.data,  # Use serializer.data instead of the recruiter instance
                 'message': 'Registration successful. An admin will review your request.'
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
 
 
 class PendingRecruitersView(APIView):
@@ -198,9 +229,8 @@ class LoginUserView(GenericAPIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-
     
 
 
@@ -298,6 +328,67 @@ class UserListView(generics.ListAPIView):
     def get_queryset(self):
         return User.objects.filter(user_type='normal')
     
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAdminUser
+
+class BlockUserView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            user.is_blocked = True
+            user.save()
+            return Response({"message": "User blocked successfully"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class UnblockUserView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            user.is_blocked = False
+            user.save()
+            return Response({"message": "User unblocked successfully"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAdminUser
+
+class BlockRecruiterView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, recruiter_id):
+        try:
+            recruiter = Recruiter.objects.get(id=recruiter_id)
+            recruiter.is_blocked = True
+            recruiter.save()
+            return Response({"message": "Recruiter blocked successfully"}, status=status.HTTP_200_OK)
+        except Recruiter.DoesNotExist:
+            return Response({"error": "Recruiter not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class UnblockRecruiterView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, recruiter_id):
+        try:
+            recruiter = Recruiter.objects.get(id=recruiter_id)
+            recruiter.is_blocked = False
+            recruiter.save()
+            return Response({"message": "Recruiter unblocked successfully"}, status=status.HTTP_200_OK)
+        except Recruiter.DoesNotExist:
+            return Response({"error": "Recruiter not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 
@@ -631,6 +722,19 @@ class SkillListCreateAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SkillUpdateAPIView(APIView):
+    def put(self, request, pk):
+        try:
+            skill = Skill.objects.get(pk=pk)
+        except Skill.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = SkillSerializer(skill, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SkillDeleteAPIView(APIView):
@@ -767,7 +871,6 @@ class CreateExperienceView(APIView):
         try:
 
             experience = Experience.objects.get(pk=pk, user_profile=user_profile)
-            print()
         except Experience.DoesNotExist:
             return Response({'error': 'Experience not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -777,7 +880,6 @@ class CreateExperienceView(APIView):
     
 
 class UserProfileView(APIView):
-    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
@@ -831,6 +933,15 @@ def apply_job(request, job_id):
 
 User = get_user_model()
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_type(request):
+    return Response({'user_type': request.user.user_type})
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_job_applicants(request, job_id):
@@ -847,6 +958,20 @@ def get_job_applicants(request, job_id):
         job.save()
         
         return Response(job.applications, status=200)
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=404)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_application_status(request):
+    applicant_id = request.data.get('applicant_id')
+    job_id = request.data.get('job_id')
+    status = request.data.get('status')
+
+    try:
+        job = Job.objects.get(id=job_id)
+        job.update_application_status(applicant_id, status)
+        return Response({'message': 'Status updated successfully'}, status=200)
     except Job.DoesNotExist:
         return Response({'error': 'Job not found'}, status=404)
     
@@ -888,3 +1013,26 @@ def download_resume(request, application_id):
     except Exception as e:
         print(f"Error in download_resume: {str(e)}")
         return Response({"error": str(e)}, status=500)
+    
+
+
+# views.py
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    notifications = AdminNotification.objects.filter(is_read=False)
+    data = {
+        'user_count': notifications.filter(user__user_type='normal').count(),
+        'recruiter_count': notifications.filter(user__user_type='recruiter').count(),
+    }
+    return Response(data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_notifications_read(request):
+    user_type = request.data.get('user_type')
+    AdminNotification.objects.filter(user__user_type=user_type, is_read=False).update(is_read=True)
+    return Response({'status': 'success'})
