@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { BASE_URL } from '../../utils/config';
 
 
 const Signup = () => {
@@ -51,7 +52,7 @@ const Signup = () => {
         }
 
         try {
-            const res = await axios.post("http://localhost:8000/api/v1/auth/register/", formdata);
+            const res = await axios.post(`${BASE_URL}/api/v1/auth/register/`, formdata);
             const response = res.data;
             console.log(res.data)
             console.log(response);
@@ -155,7 +156,7 @@ const Signup = () => {
                                 <div className="flex items-center">
                                     <p className="font-medium text-base">Have an account?</p>
                                     <div className="text-violet-500 text-base font-medium ml-2">
-                                        <Link to="/login">Sign in</Link>
+                                        <Link to="/">Sign in</Link>
                                     </div>
 
 

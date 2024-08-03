@@ -3,6 +3,7 @@ import { FaSearch, FaBars, FaBell, FaUserCircle } from 'react-icons/fa';
 import axiosInstance from '../../users/utils/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../../utils/config';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const Navbar = () => {
         const access_token = localStorage.getItem('access_token');
         const refresh_token = localStorage.getItem('refresh_token');
         
-        await axios.post('http://localhost:8000/api/v1/auth/admin/logout/', {
+        await axios.post(`${BASE_URL}/api/v1/auth/admin/logout/`, {
             refresh_token,
         }, {
             headers: {

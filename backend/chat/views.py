@@ -166,4 +166,3 @@ def mark_messages_as_read(request, room_id):
     ).update(is_read=True)
     return Response({'status': 'success'})
 
-# Add this to your urls.py

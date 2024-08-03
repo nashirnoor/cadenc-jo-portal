@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { BeatLoader } from 'react-spinners';
+import { BASE_URL } from '../../utils/config';
 
 const AdminHome = () => {
   const [users, setUsers] = useState([]);
@@ -16,7 +17,7 @@ const AdminHome = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(`http://localhost:8000/api/v1/auth/users/?page=${page}`, {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/users/?page=${page}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -53,7 +54,7 @@ const AdminHome = () => {
     try {
       const token = localStorage.getItem('access_token');
       const endpoint = currentStatus ? 'unblock-user' : 'block-user';
-      await axios.post(`http://localhost:8000/api/v1/auth/${endpoint}/${userId}/`, {}, {
+      await axios.post(`${BASE_URL}/api/v1/auth/${endpoint}/${userId}/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

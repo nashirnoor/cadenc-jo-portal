@@ -18,7 +18,7 @@ const PrivateRoute = ({ children }) => {
 
 const checkCompanyProfile = async () => {
     const token = JSON.parse(localStorage.getItem('access'));
-    const response = await axios.get('http://localhost:8000/api/v1/auth/company-profile/', {
+    const response = await axios.get(`${BASE_URL}/api/v1/auth/company-profile/`, {
         headers: {
             'Authorization': `Bearer ${token}`
         }

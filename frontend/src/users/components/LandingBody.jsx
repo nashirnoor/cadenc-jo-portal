@@ -4,6 +4,7 @@ import { Star, Briefcase, ClipboardCheck, User } from 'lucide-react';
 import JobCard from './JobCard';
 import { useState,useEffect } from 'react';
 import axios from 'axios';
+import { BASE_URL } from '../../utils/config';
 
 
 
@@ -18,7 +19,7 @@ const LandingBody = () => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:8000/api/v1/auth/api/jobs/`);
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/api/jobs/`);
         console.log("API Response:", response.data);
         console.log(response.data.results.salary)
         setJobs(response.data.results);

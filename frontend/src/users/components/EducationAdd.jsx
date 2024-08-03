@@ -1,8 +1,8 @@
 import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1/auth';
+import { BASE_URL } from '../../utils/config';
+const API_BASE_URL = `${BASE_URL}/api/v1/auth`;
 
 const EducationAdd = ({ onSubmit, educationData = null }) => {
   const navigate = useNavigate();

@@ -6,28 +6,22 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections
 import urllib.parse
-
 User = get_user_model()
 
 class JWTWebsocketMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
         print("Middleware called")
-        print("Middleware called")
         print(f"Scope: {scope}")
         close_old_connections()
         
-        # Decode query string
         query_string = scope.get("query_string", b"").decode("utf-8")
         print(f"Query string: {query_string}")
         
-        # Extract token from query string
         token = None
         if "token=" in query_string:
             token = query_string.split("token=")[1].split("&")[0]
             token = urllib.parse.unquote(token).strip('"')
         print(f"Received token: {token}")
-
-        
         print(f"Extracted token: {token}")
 
         if token is None:
@@ -35,7 +29,6 @@ class JWTWebsocketMiddleware(BaseMiddleware):
             raise DenyConnection()
 
         try:
-            # Decode the token
             payload = decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user_id = payload.get('user_id')
             
@@ -43,7 +36,6 @@ class JWTWebsocketMiddleware(BaseMiddleware):
                 print("No user_id in token payload")
                 raise DenyConnection()
 
-            # Get the user
             user = await self.get_user(user_id)
             if user is None:
                 print("User not found")

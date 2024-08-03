@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 from .models import ChatMessage
 
 
@@ -16,7 +15,7 @@ class MessageSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request is not None:
                 return request.build_absolute_uri(obj.file.url)
-            return obj.file.url  # Fallback to relative URL if request is not available
+            return obj.file.url 
         return None
 
     def get_image_url(self, obj):
@@ -24,5 +23,5 @@ class MessageSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request is not None:
                 return request.build_absolute_uri(obj.image.url)
-            return obj.image.url  # Fallback to relative URL if request is not available
+            return obj.image.url 
         return None

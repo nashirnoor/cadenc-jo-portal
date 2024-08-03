@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import environ
 from datetime import timedelta
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import os
+
 
 env = environ.Env(
     DEBUG=(bool, False)
@@ -34,7 +39,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 
@@ -42,7 +47,6 @@ ALLOWED_HOSTS = []
 
 
 INSTALLED_APPS = [
-    # 'channels',
     'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -66,7 +70,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'django.middleware.jwt.JWTAuthenticationMiddleware'
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -92,11 +95,7 @@ ASGI_APPLICATION = 'backend.asgi.application'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",
-#     "http://127.0.0.1:5173",
 
-# ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -194,8 +193,6 @@ CHANNEL_LAYERS = {
 }
 
 
-
-
 EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
 EMAIL_HOST_USER =env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD =env('EMAIL_HOST_PASSWORD')
@@ -213,23 +210,6 @@ REST_FRAMEWORK={
 }
 
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     ),
-#     'DEFAULT_PERMISSION_CLASSES': (
-#         'rest_framework.permissions.IsAuthenticated',
-#     ),
-# }
-
-
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",
-#     "http://localhost:3000"     
-# ]
-
-
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -239,19 +219,12 @@ SIMPLE_JWT = {
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET= env("GOOGLE_CLIENT_SECRET")
 SOCIAL_AUTH_PASSWORD = env('SOCIAL_AUTH_PASSWORD')
-# SOCIAL_AUTH_PROVIDER = 'google'
 
-# settings.py
+
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-
-
-# settings.py
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': env("CLOUD_NAME"),
@@ -261,12 +234,10 @@ CLOUDINARY_STORAGE = {
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-# DEFAULT_FROM_EMAIL = 'your_default_from_email@example.com'
 ADMIN_EMAIL = 'admin1234@gmail.com'  
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'backend.settings'

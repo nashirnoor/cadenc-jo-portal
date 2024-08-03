@@ -31,7 +31,7 @@ const UploadJob = () => {
   jwt_access = JSON.parse(jwt_access);
   const fetchSkills = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/v1/auth/skills/?search=${searchTerm}`, {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/skills/?search=${searchTerm}`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`,
         },
@@ -44,7 +44,7 @@ const UploadJob = () => {
 
   const fetchJobs = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/v1/auth/jobs/', {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/jobs/`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`,
         },
@@ -81,7 +81,7 @@ const UploadJob = () => {
   const onSubmit = async (data) => {
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/v1/auth/jobs/create/',
+        `${BASE_URL}/api/v1/auth/jobs/create/`,
         {
           job_title: data.jobTitle,
           job_type: jobType,

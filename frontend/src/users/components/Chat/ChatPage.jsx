@@ -4,6 +4,7 @@ import axios from 'axios';
 import UserList from './UserList';
 import ChatWindow from './ChatWindow';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../../../utils/config';
 
 const ChatPage = () => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -21,7 +22,7 @@ const ChatPage = () => {
             try {
                 let jwt_a = localStorage.getItem('access');
                 jwt_a = JSON.parse(jwt_a);
-                const response = await axios.get('http://localhost:8000/api/v1/auth/user-type/', {
+                const response = await axios.get(`${BASE_URL}/api/v1/auth/user-type/`, {
                     headers: {
                         'Authorization': `Bearer ${jwt_a}`,
                     }
@@ -47,7 +48,7 @@ const ChatPage = () => {
     const fetchChatHistory = async (roomId) => {
         try {
             let jwt_a = JSON.parse(localStorage.getItem('access'));
-            const response = await axios.get(`http://localhost:8000/api/v1/auth/chat/history/${roomId}/`, {
+            const response = await axios.get(`${BASE_URL}/api/v1/auth/chat/history/${roomId}/`, {
                 headers: {
                     'Authorization': `Bearer ${jwt_a}`,
                 }
@@ -60,7 +61,7 @@ const ChatPage = () => {
     const fetchUnreadCounts = async () => {
         try {
           const jwt_a = JSON.parse(localStorage.getItem('access'));
-          const response = await axios.get('http://localhost:8000/api/v1/auth/unread-message-counts/', {
+          const response = await axios.get(`${BASE_URL}/api/v1/auth/unread-message-counts/`, {
             headers: {
               'Authorization': `Bearer ${jwt_a}`,
             }
@@ -82,7 +83,7 @@ const ChatPage = () => {
         const fetchChatRoom = async () => {
             try {
                 const jwt_a = JSON.parse(localStorage.getItem('access'));
-                const response = await axios.get(`http://localhost:8000/api/v1/auth/chat-room/${roomId}/`, {
+                const response = await axios.get(`${BASE_URL}/api/v1/auth/chat-room/${roomId}/`, {
                     headers: {
                         'Authorization': `Bearer ${jwt_a}`,
                     }

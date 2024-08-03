@@ -3,6 +3,7 @@ import Header from './RecruiterHeader';
 import Footer from '../users/components/Footer';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { BASE_URL } from '../utils/config';
 
 const JobPosted = () => {
     const [loading, setLoading] = useState(true);
@@ -14,7 +15,7 @@ const JobPosted = () => {
         jwt_a = JSON.parse(jwt_a);
         const fetchJobs = async () => {
           try {
-            const response = await axios.get('http://localhost:8000/api/v1/auth/job-posted/', {
+            const response = await axios.get(`${BASE_URL}/api/v1/auth/job-posted/`, {
               headers: {
                 'Authorization': `Bearer ${jwt_a}`,
               }

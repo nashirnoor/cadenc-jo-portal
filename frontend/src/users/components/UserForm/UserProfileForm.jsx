@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../../../utils/config';
 
 const UserProfileForm = ({ onSubmit }) => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const UserProfileForm = ({ onSubmit }) => {
   }, [searchTerm]);
 
   const fetchSkills = () => {
-    axios.get(`http://localhost:8000/api/v1/auth/skills/?search=${searchTerm}`)
+    axios.get(`${BASE_URL}/api/v1/auth/skills/?search=${searchTerm}`)
       .then(response => setSkillsList(response.data.results))
       .catch(error => console.error('Error fetching skills:', error));
   };
@@ -99,7 +100,7 @@ const UserProfileForm = ({ onSubmit }) => {
     formSubmissionData.append('position', formData.position);
     formSubmissionData.append('skills', JSON.stringify(formData.skills.map(skill => skill.id)));
 
-    axios.post('http://localhost:8000/api/v1/auth/create-user-profile/', formSubmissionData, {
+    axios.post(`${BASE_URL}/api/v1/auth/create-user-profile/`, formSubmissionData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${JSON.parse(localStorage.getItem('access'))}`,

@@ -4,6 +4,7 @@ import React, { useState, useEffect,useRef } from 'react';
 import axios from 'axios';
 import { FaUsers, FaUserTie, FaFileAlt } from 'react-icons/fa';
 import Chart from 'chart.js/auto';
+import { BASE_URL } from '../../utils/config';
 
 
 
@@ -22,14 +23,14 @@ const Dashboard = () => {
       let token = localStorage.getItem('access_token');
 
       try {
-        const userStatsResponse = await axios.get('http://localhost:8000/api/v1/auth/api/user-stats/', {
+        const userStatsResponse = await axios.get(`${BASE_URL}/api/v1/auth/api/user-stats/`, {
           headers: {
             Authorization: `Bearer ${token}`, // Pass the token in the header
           },
         });
         setUserData(userStatsResponse.data);
 
-        const monthlyStatsResponse = await axios.get('http://localhost:8000/api/v1/auth/monthly-user-stats/', {
+        const monthlyStatsResponse = await axios.get(`${BASE_URL}/api/v1/auth/monthly-user-stats/`, {
           headers: {
             Authorization: `Bearer ${token}`, // Pass the token in the header
           },

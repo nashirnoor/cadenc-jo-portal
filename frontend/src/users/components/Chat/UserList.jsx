@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../../../utils/config';
 
 const UserList = ({ setSelectedUser, fetchUnreadCounts }) => {
   const [chatRooms, setChatRooms] = useState([]);
@@ -10,7 +11,7 @@ const UserList = ({ setSelectedUser, fetchUnreadCounts }) => {
   const fetchChatRooms = async () => {
     try {
       const jwt_a = JSON.parse(localStorage.getItem('access'));
-      const response = await axios.get('http://localhost:8000/api/v1/auth/chat-rooms/', {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/chat-rooms/`, {
         headers: {
           'Authorization': `Bearer ${jwt_a}`,
         }
@@ -45,7 +46,7 @@ const UserList = ({ setSelectedUser, fetchUnreadCounts }) => {
     
     try {
       const jwt_a = JSON.parse(localStorage.getItem('access'));
-      await axios.post(`http://localhost:8000/api/v1/auth/mark-messages-as-read/${user.room_id}/`, {}, {
+      await axios.post(`${BASE_URL}/api/v1/auth/mark-messages-as-read/${user.room_id}/`, {}, {
         headers: {
           'Authorization': `Bearer ${jwt_a}`,
         }

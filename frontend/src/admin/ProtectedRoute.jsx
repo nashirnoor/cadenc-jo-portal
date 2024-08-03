@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../utils/config';
 
 const ProtectedRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,7 +17,7 @@ const ProtectedRoute = () => {
         return;
       }
       try {
-        const response = await axios.get('http://localhost:8000/admin-home/', {
+        const response = await axios.get(`${BASE_URL}/admin-home/`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },

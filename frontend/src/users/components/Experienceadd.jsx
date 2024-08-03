@@ -1,6 +1,7 @@
 import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../../utils/config';
 
 const Experienceadd = ({ onSubmit,experienceData }) => {
     const navigate = useNavigate();
@@ -28,8 +29,8 @@ const Experienceadd = ({ onSubmit,experienceData }) => {
         let jwt_access = localStorage.getItem('access');
         jwt_access = JSON.parse(jwt_access);
         const url = experienceData 
-          ? `http://localhost:8000/api/v1/auth/experience/${experienceData.id}/`
-          : 'http://localhost:8000/api/v1/auth/experience/';
+          ? `${BASE_URL}/api/v1/auth/experience/${experienceData.id}/`
+          : `${BASE_URL}/api/v1/auth/experience/`;
         const method = experienceData ? 'put' : 'post';
     
         axios({

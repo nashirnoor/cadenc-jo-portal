@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import { BASE_URL } from '../../../utils/config';
 
 const EducationForm = ({ onSubmit, onSkip }) => {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ const EducationForm = ({ onSubmit, onSkip }) => {
     const userData = JSON.parse(localStorage.getItem('user'));
     const dataToSend = { ...formData, user_email: userData.email };
 
-    axios.post('http://localhost:8000/api/v1/auth/education/', dataToSend, {
+    axios.post(`${BASE_URL}/api/v1/auth/education/`, dataToSend, {
       headers: {
         'Authorization': `Bearer ${jwt_access}`
       }

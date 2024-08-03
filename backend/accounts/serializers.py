@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User,Recruiter
+from .models import CompanyProfile,Skill,UserProfile,Education,Experience,User,Recruiter,UserProfile
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -9,14 +9,8 @@ from django.utils.encoding import smart_bytes, force_str
 from django.urls import reverse
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from .utils import send_normal_email
-from .utils import Google, register_social_user
-from .models import CompanyProfile,Skill
-from django.contrib.auth import authenticate
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework import serializers
-from .models import UserProfile
-from .models import Education, Experience
+from .utils import Google, register_social_user,send_normal_email
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
@@ -162,7 +156,6 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             current_site=get_current_site(request).domain
             
             relative_link =reverse('reset-password-confirm', kwargs={'uidb64':uidb64, 'token':token})
-            # abslink=f"http://{current_site}{relative_link}"
             abslink=f"http://localhost:5173{relative_link}"
 
             print(abslink)
@@ -225,7 +218,6 @@ class LogoutUserSerializer(serializers.Serializer):
 
 
 
-#GOOGLE AREA
 class GoogleSignInSerializer(serializers.Serializer):
     access_token=serializers.CharField(min_length=6)
 
@@ -275,7 +267,6 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
             if attr == 'company_logo' and value is None:
-                # Don't update the logo if no new file is provided
                 continue
             setattr(instance, attr, value)
         instance.save()

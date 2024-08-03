@@ -2,6 +2,7 @@ import React,{useState, useEffect} from 'react';
 import {FaHome,FaRegFileAlt,FaUser} from 'react-icons/fa';
 import {Link} from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../../utils/config';
 
 
 const Sidebar = () => {
@@ -10,7 +11,7 @@ const Sidebar = () => {
         const fetchNotifications = async () => {
           try {
             const token = localStorage.getItem('access_token');
-            const response = await axios.get('http://localhost:8000/api/v1/auth/notifications/', {
+            const response = await axios.get(`${BASE_URL}/api/v1/auth/notifications/`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             setNotifications(response.data);
@@ -29,7 +30,7 @@ const Sidebar = () => {
       const handleNotificationClick = async (userType) => {
         try {
           const token = localStorage.getItem('access_token');
-          await axios.post('http://localhost:8000/api/v1/auth/notifications/mark-read/', 
+          await axios.post(`${BASE_URL}/api/v1/auth/notifications/mark-read/`, 
             { user_type: userType },
             { headers: { Authorization: `Bearer ${token}` } }
           );

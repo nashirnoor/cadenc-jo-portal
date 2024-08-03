@@ -1,19 +1,14 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from accounts.models import User
-from django.conf import settings
 
 User = get_user_model()
-
-
-    
 
 class ChatRoom(models.Model):
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_rooms_as_user1')
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_rooms_as_user2')
     created_at = models.DateTimeField(auto_now_add=True)
     last_message = models.ForeignKey('ChatMessage', related_name='last_message_for_room', on_delete=models.SET_NULL, null=True, blank=True)
-
 
     class Meta:
         unique_together = ('user1', 'user2')

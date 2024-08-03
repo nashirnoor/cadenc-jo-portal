@@ -18,6 +18,7 @@ import axiosInstance from '../users/utils/axiosInstance';
 import JobCardRecuiter from "./components/JobCardRecuiter";
 import { FaEdit } from 'react-icons/fa'; 
 import { toast } from 'sonner';
+import { BASE_URL } from "../utils/config";
 
 
 const CompanyForm = ({ open, setOpen, companyInfo, onSubmit, onUpdate, getCompanyProfile }) => {
@@ -60,7 +61,7 @@ const CompanyForm = ({ open, setOpen, companyInfo, onSubmit, onUpdate, getCompan
     console.log(jwt_access)
     
 
-    axiosInstance.put(`http://localhost:8000/api/v1/auth/company-profile/update/${companyInfo.id}/`, formData, {
+    axiosInstance.put(`${BASE_URL}/api/v1/auth/company-profile/update/${companyInfo.id}/`, formData, {
       headers: {
         'Authorization': `Bearer ${jwt_access}`,
       },
@@ -197,6 +198,8 @@ const CompanyProfile = () => {
   const [jobs2, setJobs2] = useState([]);
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [about, setAbout] = useState(companyInfo?.about || '');
+  const [editingJob, setEditingJob] = useState(null);
+
 
   useEffect(() => {
     // setInfo(companies[parseInt(params?.id) - 1 ?? 0]);
@@ -217,7 +220,7 @@ const CompanyProfile = () => {
     const checkForm = async () => {
       try {
         const jwt_access = JSON.parse(localStorage.getItem('access'));
-        const profileRes = await axios.get('http://localhost:8000/api/v1/auth/check-company-profile/', {
+        const profileRes = await axios.get(`${BASE_URL}/api/v1/auth/check-company-profile/`, {
           headers: {
             'Authorization': `Bearer ${jwt_access}`
           }
@@ -247,7 +250,7 @@ const CompanyProfile = () => {
     jwt_a = JSON.parse(jwt_a);
     const fetchJobs = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/auth/jobs/', {
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/jobs/`, {
           headers: {
             'Authorization': `Bearer ${jwt_a}`,
           }
@@ -271,7 +274,7 @@ const CompanyProfile = () => {
       jwt_access = JSON.parse(jwt_access);
 
       const response = await axios.patch(
-        'http://localhost:8000/api/v1/auth/company-profile-update/',
+       `${BASE_URL}/api/v1/auth/company-profile-update/`,
         { about },
         {
           headers: {
@@ -291,12 +294,12 @@ const CompanyProfile = () => {
     }
   };
 
-
+  
   const handleDelete = async (jobId) => {
     let jwt_a = localStorage.getItem('access');
     jwt_a = JSON.parse(jwt_a);
     try {
-      await axios.delete(`http://localhost:8000/api/v1/auth/jobs/delete/${jobId}/`, {
+      await axios.delete(`${BASE_URL}/api/v1/auth/jobs/delete/${jobId}/`, {
         headers: {
           'Authorization': `Bearer ${jwt_a}`,
         }
@@ -320,7 +323,7 @@ const CompanyProfile = () => {
         throw new Error("JWT token is missing");
       }
 
-      const response = await axios.get('http://127.0.0.1:8000/api/v1/auth/company-profile-get/', {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/company-profile-get/`, {
 
         headers: {
           'Authorization': `Bearer ${jwt_access}`,
@@ -366,6 +369,25 @@ const CompanyProfile = () => {
     } catch (error) {
       console.error('Logout error:', error);
       toast.error("Logout failed. Please try again.");
+    }
+  };
+
+  const handleEdit = (job) => {
+    setEditingJob(job);
+  };
+
+  const handleUpdateJob = async (updatedJob) => {
+    try {
+      const jwt_a = JSON.parse(localStorage.getItem('access'));
+      await axios.put(`${BASE_URL}/api/v1/auth/jobs/${updatedJob.id}/`, updatedJob, {
+        headers: {
+          'Authorization': `Bearer ${jwt_a}`,
+        }
+      });
+      setJobs(jobs.map(job => job.id === updatedJob.id ? updatedJob : job));
+      setEditingJob(null);
+    } catch (error) {
+      console.error("Error updating job:", error);
     }
   };
 
@@ -478,7 +500,12 @@ const CompanyProfile = () => {
           <div className="flex flex-wrap gap-4">
             {Array.isArray(jobs) ? (
               jobs.length > 0 ? (
-                jobs.map(job => <JobCardRecuiter key={job.id} job={{ ...job, companyInfo }} onDelete={handleDelete}/>)
+                jobs.map(job =>   <JobCardRecuiter
+                  key={job.id}
+                  job={{ ...job, companyInfo }}
+                  onDelete={handleDelete}
+                  onEdit={() => handleEdit(job)}
+                />)
               ) : (
                 <p>No jobs found.</p>
               )
@@ -487,6 +514,19 @@ const CompanyProfile = () => {
             )}
           </div>
         </div>
+        {editingJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+            <button
+              onClick={() => setEditingJob(null)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+            <EditJobForm job={editingJob} onSubmit={handleUpdateJob} />
+          </div>
+        </div>
+      )}
       </div>
       <Footer />
     </>
@@ -497,58 +537,227 @@ export default CompanyProfile;
 
 
 
+const EditJobForm = ({ job, onSubmit}) =>{
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm();
+  const [jobType, setJobType] = useState(job.job_type);
+  const [jobLocationType, setJobLocationType] = useState(job.job_location_type);
+  const [selectedSkills, setSelectedSkills] = useState(job.skills || []);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [skills, setSkills] = useState([]);
+  
+  useEffect(() => {
+    // Set initial form values
+    setValue('jobTitle', job.job_title);
+    setValue('salary', job.salary);
+    setValue('vacancies', job.vacancies);
+    setValue('experience', job.experience);
+    setValue('job_location', job.job_location);
+    setValue('job_description', job.job_description);
+    setValue('core_responsibilities', job.core_responsibilities);
+    setSelectedSkills(job.skills || []);
+  }, [job, setValue]);
 
-// const getCompanyProfile = async () => {
-//   try {
-//     const response = await axios.get('http://127.0.0.1:8000/api/v1/auth/company-profile-get/', {
-//       headers: {
-//         Authorization: `Bearer ${jwt_access}`
-//       }
-//     });
-//     setCompanyInfo(response.data,"This is responeded data checkkk");
-//     setIsLoading(false);
-//   } catch (error) {
-//     console.error('Error fetching company profile:', error);
-//     setIsLoading(false);
-//   }
-// };
+  // Implement skill search and selection logic here
+
+  const onFormSubmit = (data) => {
+    const updatedJob = {
+      ...job,
+      ...data,
+      job_type: jobType,
+      job_location_type: jobLocationType,
+      skill_ids: selectedSkills.map(skill => skill.id),
+    };
+    onSubmit(updatedJob);
+  };
 
 
-// useEffect(() => {
-//   if (!jwt_access && !user) {
-//     navigate("/login");
-//   } else {
-//     getSomeData();
-//   }
-// }, [jwt_access, user, navigate]);
 
-// useEffect(() => {
-//   console.log(jwt_access,"llllllllllllllllllllllllllll")
-//   if (jwt_access) {
-//     axios.get('http://127.0.0.1:8000/api/v1/auth/company-profile/', {
-//       headers: {
-//         Authorization: `Bearer ${jwt_access}`
-//       }
-//     })
-//       .then(response => setCompanyInfo(response.data))
-//       .catch(error => console.error('Error fetching company profile:', error));
-//   }
-// }, [jwt_access]);
+return (
+  <div className='w-full lg:w-2/3'>
+           <div className='bg-white rounded-xl shadow-2xl overflow-hidden'>
+             <div className='p-8'>
+               <h2 className='text-3xl font-extrabold text-gray-900 mb-8'>Post a New Job</h2>
+               <form className='space-y-6' onSubmit={handleSubmit(onFormSubmit)}>
+                 <TextInput
+                   name='jobTitle'
+                   label='Job Title'
+                   placeholder='e.g. Senior Software Engineer'
+                   type='text'
+                   register={register('jobTitle', {
+                     required: 'Job Title is required',
+                     validate: (value) => value.trim() !== '' || 'Job Title cannot be empty'
+                   })}
+                   error={errors.jobTitle ? errors.jobTitle?.message : ''}
+                   styles='w-full'
+                 />
+ 
+                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                 <div className='flex flex-col mt-2'>
+                     <p className='text-gray-600 text-sm mb-1'>Job Type</p>
+                     <select
+                       className='rounded border border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base px-4 py-2'
+                       value={jobType}
+                       onChange={(e) => setJobType(e.target.value)}
+                     >
+                       <option value='full_time'>Full-time</option>
+                       <option value='part_time'>Part-time</option>
+                       <option value='contract'>Contract</option>
+                       <option value='intern'>Intern</option>
+                     </select>
+                   </div>
+                     
+                   <TextInput
+                     name='salary'
+                     label='Salary (INR)'
+                     placeholder='e.g. 150000'
+                     type='number'
+                     register={register('salary', {
+                       required: 'Salary is required',
+                       min: { value: 0, message: 'Salary must be 0 or greater' },
+                       validate: (value) => parseInt(value) >= 0 || 'Salary must be 0 or greater'
+                     })}
+                     error={errors.salary ? errors.salary?.message : ''}
+                   />
+                 </div>
+ 
+                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                   <TextInput
+                     name='vacancies'
+                     label='No. of Vacancies'
+                     placeholder='Number of open positions'
+                     type='number'
+                     register={register('vacancies', {
+                       required: 'Vacancies is required!',
+                       min: { value: 0, message: 'Vacancies must be 0 or greater' },
+                       validate: (value) => parseInt(value) >= 0 || 'Vacancies must be 0 or greater'
+                     })}
+                     error={errors.vacancies ? errors.vacancies?.message : ''}
+                   />
+ 
+                   <TextInput
+                     name='experience'
+                     label='Years of Experience'
+                     placeholder='Required experience'
+                     type='number'
+                     register={register('experience', {
+                       required: 'Experience is required',
+                       min: { value: 0, message: 'Experience must be 0 or greater' },
+                       validate: (value) => parseInt(value) >= 0 || 'Experience must be 0 or greater'
+                     })}
+                     error={errors.experience ? errors.experience?.message : ''}
+                   />
+                 </div>
+                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 
-// const refreshToken = async () => {
-//   try {
-//     const response = await axios.post('http://127.0.0.1:8000/api/v1/auth/token/refresh/', { refresh: jwt_refresh });
-//     localStorage.setItem('access', response.data.access);
-//     return response.data.access;
-//   } catch (error) {
-//     console.error('Error refreshing token:', error);
-//     handleLogout();
-//   }
-// };
+                 <TextInput
+                   name='location'
+                   label='Job Location'
+                   placeholder='e.g. New York'
+                   type='text'
+                   register={register('job_location', {
+                     required: 'Job Location is required',
+                     validate: (value) => value.trim() !== '' || 'Job Location cannot be empty'
+                   })}
+                   error={errors.job_location ? errors.job_location?.message : ''}
+                   styles='w-full'
+                 />
+                   <div className='flex flex-col mt-2'>
+                       <p className='text-gray-600 text-sm mb-1'>Job Location Type</p>
+                       <select
+                         className='rounded border border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base px-4 py-2'
+                         value={jobLocationType}
+                         onChange={(e) => setJobLocationType(e.target.value)}
+                       >
+                         <option value='on_site'>On-site</option>
+                         <option value='hybrid'>Hybrid</option>
+                         <option value='remote'>Remote</option>
+                       </select>
+                     </div>
+                     </div>
 
-// axiosInstance.post('http://localhost:8000/api/v1/auth/company-profile/', formData, {
-//   headers: {
-//     'Content-Type': 'multipart/form-data',
-//     'Authorization': `Bearer ${jwt_access}` // Adjust based on your auth implementation
-//   }
-// })
+                 <div>
+                   <label className='block text-sm font-medium text-gray-700 mb-1'>Job Description</label>
+                   <textarea
+                     className='w-full rounded-md border border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
+                     rows={4}
+                     {...register('job_description', {
+                       required: 'Job Description is required!',
+                       validate: (value) => value.trim() !== '' || 'Job Description cannot be empty'
+                     })}
+                     aria-invalid={errors.job_description ? 'true' : 'false'}
+                   ></textarea>
+                   {errors.job_description && (
+                     <p className='mt-1 text-sm text-red-600'>{errors.job_description?.message}</p>
+                   )}
+                 </div>
+                 <div className="mb-6">
+                     <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
+                       Skills
+                     </label>
+                     <div className="relative">
+                       <input
+                         type="text"
+                         value={searchTerm}
+                         onChange={handleSearchChange}
+                         placeholder="Search and select skills"
+                         className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                       />
+                       {searchTerm && (
+                         <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                           {skills.map(skill => (
+                             <li
+                               key={skill.id}
+                               onClick={() => handleSkillSelect(skill)}
+                               className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50"
+                             >
+                               {skill.name}
+                             </li>
+                           ))}
+                         </ul>
+                       )}
+                     </div>
+                     <div className="mt-2 flex flex-wrap">
+                       {selectedSkills.map(skill => (
+                         <span key={skill.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
+                           {skill.name}
+                           <button
+                             type="button"
+                             onClick={() => handleRemoveSkill(skill.id)}
+                             className="ml-1 text-blue-400 hover:text-blue-600 focus:outline-none"
+                           >
+                             &times;
+                           </button>
+                         </span>
+                       ))}
+                     </div>
+                   </div>
+ 
+                 <div>
+                   <label className='block text-sm font-medium text-gray-700 mb-1'>Core Responsibilities</label>
+                   <textarea
+                     className='w-full rounded-md border border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
+                     rows={4}
+                     {...register('core_responsibilities', {
+                       validate: (value) => !value || value.trim() !== '' || 'Core Responsibilities cannot be empty if provided'
+                     })}
+                   ></textarea>
+                   {errors.core_responsibilities && (
+                     <p className='mt-1 text-sm text-red-600'>{errors.core_responsibilities?.message}</p>
+                   )}
+                 </div>
+ 
+                 {errMsg && <p className="text-sm text-red-600">{errMsg}</p>}
+ 
+                 <div>
+                   <CustomButton
+                     type='submit'
+                     containerStyles='w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                     title='Update Job'
+                   />
+                 </div>
+               </form>
+             </div>
+           </div>
+         </div>
+         )
+}

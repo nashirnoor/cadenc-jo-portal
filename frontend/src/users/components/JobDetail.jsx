@@ -8,6 +8,7 @@ import JobCard from "./JobCard";
 import axios from "axios";
 import Header from "./Header";
 import { AiOutlineClose } from 'react-icons/ai';
+import { BASE_URL } from "../../utils/config";
 
 
 const ApplicationModal = ({ isOpen, onClose, jobType, jobLocation,id,setIsApplied }) => {
@@ -81,7 +82,7 @@ const ApplicationModal = ({ isOpen, onClose, jobType, jobLocation,id,setIsApplie
         let jwt_a = localStorage.getItem('access');
         jwt_a = JSON.parse(jwt_a);
         const response = await axios.post(
-          `http://localhost:8000/api/v1/auth/${id}/apply/`,
+          `${BASE_URL}/api/v1/auth/${id}/apply/`,
           formData,
           {
             headers: {
@@ -250,7 +251,7 @@ const JobDetail = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/auth/api/jobs');
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/api/jobs`);
         console.log("API Response:", response.data);
         setJobs(response.data.results);
       } catch (err) {
@@ -266,7 +267,7 @@ const JobDetail = () => {
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/v1/auth/api/jobs/${id}/`);
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/api/jobs/${id}/`);
         const jobData = response.data;
         setJob(jobData);
         const user = JSON.parse(localStorage.getItem('user')); // Parse user object from local storage

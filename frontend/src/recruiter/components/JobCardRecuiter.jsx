@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { GoLocation } from "react-icons/go";
 import moment from "moment";
 import { Link } from "react-router-dom";
-import { MdDelete } from 'react-icons/md'; // Import delete icon from react-icons/md
+import { MdDelete,MdEdit } from 'react-icons/md'; // Import delete icon from react-icons/md
 import Modal from 'react-modal';
 import { toast } from 'sonner';
 
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 Modal.setAppElement('#root');
 
-const JobCardRecuiter = ({ job,onDelete }) => {
+const JobCardRecuiter = ({ job,onDelete,onEdit }) => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const defaultImage = "/images/company-image-default.png";
@@ -21,7 +21,7 @@ const JobCardRecuiter = ({ job,onDelete }) => {
     if (!text) return ''; // Handle cases where text is undefined or null
     return text.length > length ? text.substring(0, length) + "..." : text;
   };
-
+  
   const handleDeleteClick = (e) => {
     e.preventDefault(); // Prevent link navigation
     setShowConfirm(true);
@@ -35,6 +35,12 @@ const JobCardRecuiter = ({ job,onDelete }) => {
       // Handle error (e.g., show an error message to the user)
     }
   };
+
+  const handleEditClick = (e) => {
+    e.preventDefault();
+    onEdit(job);
+  };
+
 
   const handleCancelDelete = () => {
     setShowConfirm(false);
@@ -74,6 +80,12 @@ const JobCardRecuiter = ({ job,onDelete }) => {
         </div>
 
         {/* Delete icon and confirmation */}
+        <button
+              className='text-gray-400 hover:text-blue-500'
+              onClick={handleEditClick}
+            >
+              <MdEdit size={20} />
+            </button>
         <button
             className='absolute top-2 right-2 text-gray-400 hover:text-red-500'
             onClick={handleDeleteClick}

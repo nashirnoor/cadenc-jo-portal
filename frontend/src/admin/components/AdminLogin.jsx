@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../../utils/config';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +12,7 @@ const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/admin-login/', {
+      const response = await axios.post(`${BASE_URL}/admin-login/`, {
         email,
         password,
       });

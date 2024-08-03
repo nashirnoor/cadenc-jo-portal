@@ -33,7 +33,7 @@ const Header = () => {
 
     useEffect(() => {
         if (!jwt_access && !user) {
-            navigate("/login");
+            navigate("/");
         } else {
             getSomeData();
             getCompanyProfile();
@@ -71,7 +71,7 @@ const Header = () => {
                 throw new Error("JWT token is missing");
             }
 
-            const response = await axios.get('http://127.0.0.1:8000/api/v1/auth/company-profile-get/', {
+            const response = await axios.get(`${BASE_URL}/api/v1/auth/company-profile-get/`, {
 
                 headers: {
                     'Authorization': `Bearer ${jwt_access}`,
@@ -100,7 +100,7 @@ const Header = () => {
             localStorage.removeItem('access');
             localStorage.removeItem('refresh');
             localStorage.removeItem('user');
-            navigate('/login');
+            navigate('/');
             toast.success("Logout successful");
         } catch (error) {
             console.error('Logout error:', error);
@@ -137,7 +137,7 @@ const Header = () => {
               </Link>
             ) : (
               <>
-                <Link to="/login" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">Login</Link>
+                <Link to="/" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">Login</Link>
                 <Link to="/signup" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Signup</Link>
               </>
             )}
@@ -170,7 +170,7 @@ const Header = () => {
 
               {!jwt_access && !user && (
                 <>
-                  <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium">Login</Link>
+                  <Link to="/" className="block px-3 py-2 rounded-md text-base font-medium">Login</Link>
                   <Link to="/signup" className="block px-3 py-2 rounded-md text-base font-medium">Signup</Link>
                 </>
               )}

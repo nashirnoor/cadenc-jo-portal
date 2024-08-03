@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { BASE_URL } from '../../../utils/config';
 
 const ChatWindow = ({ selectedUser, messages, setMessages }) => {
     const [newMessage, setNewMessage] = useState('');
@@ -40,7 +41,7 @@ const ChatWindow = ({ selectedUser, messages, setMessages }) => {
             if (!data.sent) {
                 try {
                   const jwt_a = JSON.parse(localStorage.getItem('access'));
-                  await axios.post(`http://localhost:8000/api/v1/auth/mark-messages-as-read/${roomId}/`, {}, {
+                  await axios.post(`${BASE_URL}/api/v1/auth/mark-messages-as-read/${roomId}/`, {}, {
                     headers: {
                       'Authorization': `Bearer ${jwt_a}`,
                     }
@@ -77,7 +78,7 @@ const ChatWindow = ({ selectedUser, messages, setMessages }) => {
             try {
                 let jwt_a = localStorage.getItem('access');
                 jwt_a = JSON.parse(jwt_a);
-                const response = await axios.get(`http://localhost:8000/api/v1/auth/chat/history/${selectedUser.id}/`, {
+                const response = await axios.get(`${BASE_URL}/api/v1/auth/chat/history/${selectedUser.id}/`, {
                     headers: {
                         'Authorization': `Bearer ${jwt_a}`,
                     }
@@ -114,7 +115,7 @@ const ChatWindow = ({ selectedUser, messages, setMessages }) => {
                 let jwt_a = localStorage.getItem('access');
                 jwt_a = JSON.parse(jwt_a);
                 
-                const response = await axios.post('http://localhost:8000/api/v1/auth/chat/send/', formData, {
+                const response = await axios.post(`${BASE_URL}/api/v1/auth/chat/send/`, formData, {
                     headers: {
                         'Authorization': `Bearer ${jwt_a}`,
                         'Content-Type': 'multipart/form-data',

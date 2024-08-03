@@ -13,6 +13,7 @@ import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import Footer from "./Footer";
 import JobCard from "./JobCard";
+import { BASE_URL } from "../../utils/config";
 
 
 const FindJobs = () => {
@@ -47,7 +48,7 @@ const FindJobs = () => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:8000/api/v1/auth/api/jobs/?page=${currentPage}&job_title=${searchTitle}&job_location=${searchLocation}`);
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/api/jobs/?page=${currentPage}&job_title=${searchTitle}&job_location=${searchLocation}`);
         console.log("API Response:", response.data);
         console.log(response.data.results.salary)
         setJobs(response.data.results);

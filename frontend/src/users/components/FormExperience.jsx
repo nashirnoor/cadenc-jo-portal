@@ -22,7 +22,7 @@ const navigate = useNavigate();
     e.preventDefault();
     let jwt_access = localStorage.getItem('access');
     jwt_access = JSON.parse(jwt_access);
-    axios.post('http://localhost:8000/api/v1/auth/experience/', formData, {
+    axios.post(`${BASE_URL}/api/v1/auth/experience/`, formData, {
       headers: {
         'Authorization': `Bearer ${jwt_access}`
       }

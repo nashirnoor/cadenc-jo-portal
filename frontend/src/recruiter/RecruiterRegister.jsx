@@ -56,9 +56,9 @@ const RecruiterRegister = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:8000/api/v1/auth/recruiter/", formData);
+      const res = await axios.post(`${BASE_URL}/api/v1/auth/recruiter/`, formData);
       if (res.status === 201) {
-        navigate("/login");
+        navigate("/");
         toast.success(res.data.message);
       }
     } catch (error) {
@@ -155,7 +155,7 @@ const RecruiterRegister = () => {
               <div className="mt-4 flex justify-center items-center">
                 <p className="font-medium text-base">Have an account?</p>
                 <div className="text-violet-500 text-base font-medium ml-2">
-                  <Link to="/login">Sign in</Link>
+                  <Link to="/">Sign in</Link>
                 </div>
               </div>
             </div>

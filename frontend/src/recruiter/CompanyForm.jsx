@@ -4,6 +4,7 @@ import axios from 'axios';
 import TextInput from "../users/components/TextInput";
 import CustomButton from '../users/components/Custombutton';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../utils/config';
 
 const CompanyForm = () => {
     const { register, handleSubmit, reset, formState: { errors } } = useForm();
@@ -21,7 +22,7 @@ const CompanyForm = () => {
     
             const jwt_access = JSON.parse(localStorage.getItem('access'));
             console.log(jwt_access)
-            const response = await axios.post('http://localhost:8000/api/v1/auth/company-profile/', formData, {
+            const response = await axios.post(`${BASE_URL}/api/v1/auth/company-profile/`, formData, {
                 headers: {
                     'Authorization': `Bearer ${jwt_access}`,
                     'Content-Type': 'multipart/form-data'

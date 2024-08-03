@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Menu, X, User, Settings, LogOut } from 'lucide-react';
 import axios from 'axios';
+import { BASE_URL } from '../../utils/config';
 
 const CustomButton = styled(Button)({
   backgroundColor: 'black',
@@ -26,7 +27,7 @@ const Header = () => {
   const fetchProfileData = async () => {
     try {
       const jwt_access = JSON.parse(localStorage.getItem('access'));
-      const response = await axios.get('http://localhost:8000/api/v1/auth/user-profile/', {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/user-profile/`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`
         }

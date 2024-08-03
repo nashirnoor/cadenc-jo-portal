@@ -3,13 +3,11 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 from .manager import UserManager
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
 import uuid
-
-# Create your models here.
+from django.contrib.auth import get_user_model
 
 
 AUTH_PROVIDERS = {'email':'email', 'google':'google'}
@@ -42,7 +40,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='normal')
     skills = models.ManyToManyField(Skill, related_name="users", blank=True, verbose_name=_("Skills"))
 
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name"]
 
@@ -53,7 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def get_full_name(self):
-        return self.first_name  # Adjusted to return only the first name
+        return self.first_name  
 
     def tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -76,7 +73,6 @@ class Recruiter(User):
 
 class CompanyProfile(models.Model):
     recruiter = models.OneToOneField(Recruiter, on_delete=models.CASCADE, related_name='company_profile')
-
     company_name = models.CharField(max_length=255, verbose_name=_("Company Name"))
     about = models.CharField(max_length=1000, verbose_name=_("About"), blank=True)
     company_location = models.CharField(max_length=255, verbose_name=_("Company Location"))
@@ -109,10 +105,6 @@ class OneTimePassword(models.Model):
         return f"{self.user.first_name}-passcode"
 
     
-
-from django.contrib.auth import get_user_model
-
-
 User = get_user_model()
 
 class Job(models.Model):
@@ -212,13 +204,12 @@ class Experience(models.Model):
     location_type = models.CharField(max_length=10, choices=LOCATION_TYPES, verbose_name=_("Location Type"))
     start_date = models.DateField(verbose_name=_("Start Date"))
     end_date = models.DateField(verbose_name=_("End Date"), null=True, blank=True)
-    # skills = models.ManyToManyField('Skill', related_name='experiences', verbose_name=_("Skills"))
     role = models.CharField(max_length=100, verbose_name=_("Role"))
 
     def __str__(self):
         return f"{self.title} at {self.user_profile.user.email}"
     
-# models.py
+
 class AdminNotification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.CharField(max_length=255)

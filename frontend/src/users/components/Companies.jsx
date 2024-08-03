@@ -3,6 +3,7 @@ import CompanyCard from "./CompanyCard";
 import CustomButton from "./Custombutton";
 import axios from "axios";
 import Header from "./Header";
+import { BASE_URL } from "../../utils/config";
 
 
 const Companies = () => {
@@ -15,7 +16,7 @@ const Companies = () => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/auth/companies/');
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/companies/`);
         console.log('Fetched Companies:', response.data);
         setCompanies(response.data);
         setLoading(false);

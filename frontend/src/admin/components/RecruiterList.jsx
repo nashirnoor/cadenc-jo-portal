@@ -5,6 +5,7 @@ import axiosInstance from '../../users/utils/axiosInstance';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { BeatLoader } from 'react-spinners';
+import { BASE_URL } from '../../utils/config';
 
 const RecruiterList = () => {
   const [recruiters, setRecruiters] = useState([]);
@@ -21,7 +22,7 @@ const RecruiterList = () => {
       if (!token) {
         throw new Error('No access token found');
       }
-      const response = await axiosInstance.get(`http://localhost:8000/api/v1/auth/recruiters/?page=${page}`, {
+      const response = await axiosInstance.get(`${BASE_URL}/api/v1/auth/recruiters/?page=${page}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -41,7 +42,7 @@ const RecruiterList = () => {
     try {
       const token = localStorage.getItem('access_token');
       const endpoint = currentStatus ? 'unblock-recruiter' : 'block-recruiter';
-      await axiosInstance.post(`http://localhost:8000/api/v1/auth/${endpoint}/${recruiterId}/`, {}, {
+      await axiosInstance.post(`${BASE_URL}/api/v1/auth/${endpoint}/${recruiterId}/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

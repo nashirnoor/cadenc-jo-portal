@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import GoogleOauthSignInview,AdminLoginView,AdminHomeView,AdminLogoutApiView
-# from chat.views import get_user_list,get_user_by_id
+
 
 urlpatterns = [
     path('google/', GoogleOauthSignInview.as_view(), name='google'),

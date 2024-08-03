@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
+import { BASE_URL } from '../../utils/config';
 
 const SkillManagement = () => {
   const [skills, setSkills] = useState([]);
@@ -17,7 +18,7 @@ const SkillManagement = () => {
 
   const fetchSkills = async (page) => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/v1/auth/skills/?page=${page}`);
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/skills/?page=${page}`);
       setSkills(response.data.results);
       setTotalPages(Math.ceil(response.data.count / 9));
     } catch (error) {
@@ -32,7 +33,7 @@ const SkillManagement = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/auth/skills/', { name: newSkill });
+      const response = await axios.post(`${BASE_URL}/api/v1/auth/skills/`, { name: newSkill });
       setSkills([...skills, response.data]);
       setNewSkill('');
       setErrorMessage('');
@@ -48,7 +49,7 @@ const SkillManagement = () => {
 
   const deleteSkill = async (id) => {
     try {
-      await axios.delete(`http://localhost:8000/api/v1/auth/skills/${id}/`);
+      await axios.delete(`${BASE_URL}/api/v1/auth/skills/${id}/`);
       setSkills(skills.filter(skill => skill.id !== id));
       fetchSkills(currentPage);
     } catch (error) {
@@ -71,7 +72,7 @@ const SkillManagement = () => {
     }
 
     try {
-      const response = await axios.put(`http://localhost:8000/api/v1/auth/skills-update/${editingSkill.id}/`, editingSkill);
+      const response = await axios.put(`${BASE_URL}/api/v1/auth/skills-update/${editingSkill.id}/`, editingSkill);
       setSkills(skills.map(skill => skill.id === editingSkill.id ? response.data : skill));
       setEditingSkill(null);
       setErrorMessage('');

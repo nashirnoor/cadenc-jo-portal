@@ -4,7 +4,7 @@ import axios from 'axios';
 import Header from './RecruiterHeader';
 import Footer from '../users/components/Footer';
 import { useNavigate } from 'react-router-dom';
-
+import { BASE_URL } from '../utils/config';
 
 const Applicants = () => {
   const [applicants, setApplicants] = useState([]);
@@ -18,7 +18,7 @@ const Applicants = () => {
     try {
       const jwt_a = JSON.parse(localStorage.getItem('access'));
       const response = await axios.post(
-        'http://localhost:8000/api/v1/auth/create-chat-room/',
+        `${BASE_URL}/api/v1/auth/create-chat-room/`,
         { applicant_id: applicantId },
         {
           headers: {
@@ -37,7 +37,7 @@ const Applicants = () => {
     try {
       const jwt_a = JSON.parse(localStorage.getItem('access'));
       await axios.post(
-        'http://localhost:8000/api/v1/auth/update-application-status/',
+        `${BASE_URL}/api/v1/auth/update-application-status/`,
         { 
           applicant_id: applicantId,
           job_id: jobId,
@@ -65,7 +65,7 @@ const Applicants = () => {
     const fetchApplicants = async () => {
       try {
         const jwt_a = JSON.parse(localStorage.getItem('access'));
-        const response = await axios.get(`http://localhost:8000/api/v1/auth/${jobId}/applicants/`, {
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/${jobId}/applicants/`, {
           headers: {
             'Authorization': `Bearer ${jwt_a}`,
           }

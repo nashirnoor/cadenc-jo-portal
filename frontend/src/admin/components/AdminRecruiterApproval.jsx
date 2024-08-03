@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';  
 import { NavLink } from 'react-router-dom';
+import { BASE_URL } from '../../utils/config';
 
 const AdminRecruiterApproval = () => {
   const [recruiters, setRecruiters] = useState([]);
@@ -16,7 +17,7 @@ const AdminRecruiterApproval = () => {
     try {
         let token = localStorage.getItem('access_token');
 
-      const res = await axios.get('http://localhost:8000/api/v1/auth/admin/recruiters/pending/', {
+      const res = await axios.get(`${BASE_URL}/api/v1/auth/admin/recruiters/pending/`, {
         headers: {
           Authorization: `Bearer ${token}`, // Pass the token in the header
         },
@@ -33,7 +34,7 @@ const AdminRecruiterApproval = () => {
       let token = localStorage.getItem('access_token');
       
       await axios.post(
-        `http://localhost:8000/api/v1/auth/admin/recruiters/pending/${recruiterId}/`,
+        `${BASE_URL}/api/v1/auth/admin/recruiters/pending/${recruiterId}/`,
         { action },
         {
           headers: {

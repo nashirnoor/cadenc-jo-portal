@@ -1,10 +1,8 @@
 from rest_framework.generics import GenericAPIView
 from .serializers import UserRegisterSerializer,LoginSerializer,PasswordResetRequestSerializer, SetNewPasswordSerializer,LogoutUserSerializer, GoogleSignInSerializer,RecruiterRegisterSerializer,CompanyProfileSerializer,SkillSerializer
-from rest_framework.response import Response
 from rest_framework import status
 from .utils import send_code_to_user
 from .models import OneTimePassword,CompanyProfile, UserProfile
-from rest_framework.permissions import IsAuthenticated
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -14,6 +12,9 @@ from .serializers import UserListSerializer, RecruiterListSerializer
 from rest_framework.permissions import IsAdminUser
 from rest_framework import generics
 from .models import Skill
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -28,10 +29,10 @@ from .utils import send_normal_email
 from rest_framework.permissions import BasePermission
 from rest_framework import generics
 from .models import User
+from django.db.models import Count
 from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from .models import UserProfile, Skill
 from .serializers import UserProfileSerializer
 import json
@@ -42,7 +43,6 @@ from rest_framework import generics, permissions
 from .models import Job
 from .serializers import JobSerializer
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from .models import Job
 from django.http import HttpResponse
 import requests
@@ -52,18 +52,29 @@ import time
 from django.core.files.storage import default_storage
 import os
 import uuid
-
-
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAdminUser
+from .models import Experience,Education
 from django.http import JsonResponse
 from django.db.models import Count
 from .models import User,Job
+from django.utils import timezone
+from django.db.models import Count, functions as F
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.permissions import IsAdminUser
+
+
 
 def user_stats(request):
     total_users = User.objects.count()
     total_recruiters = User.objects.filter(user_type='recruiter').count()
     total_normal_users = User.objects.filter(user_type='normal').count()
-    
-    # Assuming you have a Post model, otherwise remove this line
     total_posts = Job.objects.count()
 
     return JsonResponse({
@@ -74,18 +85,12 @@ def user_stats(request):
     })
 
 
-from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
-from django.utils import timezone
-from django.db.models import Count, functions as F
-
 class MonthlyUserStats(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
         current_year = timezone.now().year
 
-        # Annotate the queryset with the month extracted from date_joined
         monthly_data = User.objects.filter(
             date_joined__year=current_year
         ).annotate(
@@ -96,7 +101,6 @@ class MonthlyUserStats(APIView):
             count=Count('id')
         ).order_by('month')
 
-        # Prepare the data for the chart
         data = [0] * 12
         for entry in monthly_data:
             data[entry['month'] - 1] = entry['count']
@@ -113,7 +117,6 @@ class RegisterUserView(GenericAPIView):
         serializer = self.serializer_class(data=user_data)
         if serializer.is_valid(raise_exception=True):
             user = serializer.save()
-            # user = serializer.data
             AdminNotification.objects.create(
                 user=user,
                 message=f"New user registered: {user.email}"
@@ -136,7 +139,6 @@ class RegisterRecruiterView(GenericAPIView):
         serializer = self.serializer_class(data=recruiter_data)
         if serializer.is_valid(raise_exception=True):
             recruiter = serializer.save()
-            # Notify admin
             AdminNotification.objects.create(
                 user=recruiter,
                 message=f"New recruiter registered: {recruiter.email}"
@@ -149,7 +151,7 @@ class RegisterRecruiterView(GenericAPIView):
                 fail_silently=False,
             )
             return Response({
-                'data': serializer.data,  # Use serializer.data instead of the recruiter instance
+                'data': serializer.data, 
                 'message': 'Registration successful. An admin will review your request.'
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -169,10 +171,9 @@ class PendingRecruitersView(APIView):
             recruiter = Recruiter.objects.get(id=recruiter_id, is_approved=False)
             if action == 'approve':
                 recruiter.is_approved = True
-                recruiter.is_verified = True  # Mark recruiter as verified
+                recruiter.is_verified = True  
                 recruiter.save()
                 
-                # Send approval email
                 email_body = f"Hi {recruiter.first_name}, your recruiter account has been approved. You can now log in using the following link: http://localhost:5173/login"
                 email_data = {
                     'email_subject': 'Recruiter Account Approved',
@@ -183,7 +184,6 @@ class PendingRecruitersView(APIView):
                 
                 return Response({'message': 'Recruiter approved'}, status=status.HTTP_200_OK)
             elif action == 'reject':
-                # Send rejection email before deleting
                 email_body = f"Hi {recruiter.first_name}, we regret to inform you that your recruiter account has been rejected."
                 email_data = {
                     'email_subject': 'Recruiter Account Rejected',
@@ -286,7 +286,6 @@ class LogoutApiView(GenericAPIView):
     
 
     
-
 class IsAdminUser(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.is_superuser
@@ -301,7 +300,6 @@ class AdminLogoutApiView(GenericAPIView):
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-#Google
 
 class GoogleOauthSignInview(GenericAPIView):
     serializer_class=GoogleSignInSerializer
@@ -316,7 +314,7 @@ class GoogleOauthSignInview(GenericAPIView):
     
     
 class UserPagination(PageNumberPagination):
-    page_size = 5 # Number of users per page
+    page_size = 5
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -328,14 +326,7 @@ class UserListView(generics.ListAPIView):
     def get_queryset(self):
         return User.objects.filter(user_type='normal')
     
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework import status
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAdminUser
 
 class BlockUserView(APIView):
     permission_classes = [IsAdminUser]
@@ -361,10 +352,6 @@ class UnblockUserView(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAdminUser
 
 class BlockRecruiterView(APIView):
     permission_classes = [IsAdminUser]
@@ -403,10 +390,7 @@ class RecruiterListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPaginationrecruiter
 
-
-
-
-    
+  
 class AdminLoginView(GenericAPIView):
     serializer_class = AdminLoginSerializer
 
@@ -497,7 +481,6 @@ def delete_job(request, job_id):
     job.save()
     return Response({"message": "Job unlisted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
-from django.db.models import Count
 
 
 @api_view(['GET'])
@@ -507,18 +490,10 @@ def suggested_jobs(request, job_id):
     except Job.DoesNotExist:
         return Response({"error": "Job not found"}, status=404)
 
-    # Get the skills of the current job
     job_skills = job.skills.all()
-
-    # Find jobs with similar skills
     similar_jobs = Job.objects.filter(skills__in=job_skills).exclude(id=job_id).distinct()
-
-    # Order jobs by the number of matching skills
     similar_jobs = similar_jobs.annotate(matching_skills=Count('skills')).order_by('-matching_skills')
-
-    # Limit to 6 similar jobs
     similar_jobs = similar_jobs[:6]
-
     serializer = JobSerializer(similar_jobs, many=True, context={'request': request})
     return Response(serializer.data)
 
@@ -768,16 +743,13 @@ class CreateUserProfileView(APIView):
         user = request.user
         print(user)
 
-        # Check if user already has a profile
         if hasattr(user, 'profile'):
             return Response({"detail": "User profile already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Handle skills
         skill_ids = request.data.get('skills', [])
         skill_ids = json.loads(skill_ids)
         skills = Skill.objects.filter(id__in=skill_ids)
 
-        # Create UserProfile
         serializer = UserProfileSerializer(data=request.data)
         if serializer.is_valid():
             profile = serializer.save(user=user)
@@ -785,7 +757,6 @@ class CreateUserProfileView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-from .models import Experience,Education
 
 
 class CreateEducationView(APIView):
@@ -918,7 +889,7 @@ def apply_job(request, job_id):
         resume_url = None
 
     application = {
-        'id': str(uuid.uuid4()),  # Unique ID for each application
+        'id': str(uuid.uuid4()),  
         'user_id': user.id,
         'is_immediate_joinee': request.data.get('isImmediateJoinee'),
         'experience': request.data.get('experience'),
@@ -933,9 +904,6 @@ def apply_job(request, job_id):
 
 User = get_user_model()
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

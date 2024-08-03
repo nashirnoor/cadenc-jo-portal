@@ -2,6 +2,7 @@ import React, { useState,useEffect } from 'react';
 import { Link, json, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { BASE_URL } from '../../utils/config';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -22,7 +23,7 @@ const Login = () => {
         const payload = response.credential;
         console.log("Google OAuth payload:", payload); // Log the token
 
-        const server_res = await axios.post("http://localhost:8000/google/", { 'access_token': payload });
+        const server_res = await axios.post(`${BASE_URL}/google/`, { 'access_token': payload });
         console.log(server_res.data, 'server');
         const user = {
             "email": server_res.data.email,
@@ -56,7 +57,7 @@ const Login = () => {
         } else {
             setIsLoading(true);
             try {
-                const res = await axios.post("http://localhost:8000/api/v1/auth/login/", logindata);
+                const res = await axios.post(`${BASE_URL}/api/v1/auth/login/`, logindata);
                 const response = res.data;
                 console.log(response);
                 setIsLoading(false);
@@ -75,7 +76,7 @@ const Login = () => {
                         const jwt_access = JSON.parse(localStorage.getItem('access'));
                         console.log(jwt_access)
 
-                        const profileRes = await axios.get('http://localhost:8000/api/v1/auth/check-company-profile/', {
+                        const profileRes = await axios.get(`${BASE_URL}/api/v1/auth/check-company-profile/`, {
                             headers: {
                                 'Authorization': `Bearer ${jwt_access}`
                             }
@@ -90,7 +91,7 @@ const Login = () => {
                     } else {
                         try {
                             const jwt_access = JSON.parse(localStorage.getItem('access'));
-                            const userProfileRes = await axios.get('http://localhost:8000/api/v1/auth/check-user-profile/', {
+                            const userProfileRes = await axios.get(`${BASE_URL}/api/v1/auth/check-user-profile/`, {
                                 headers: {
                                     'Authorization': `Bearer ${jwt_access}`
                                 }
@@ -179,7 +180,7 @@ const Login = () => {
                         </div>
                         <div className="mt-6 flex flex-col gap-y-3">
                             <button className="active:scale-[.98] active:duration-75 hover:scale-[1.01] ease-in-out transition-all py-2.5 rounded-xl bg-violet-500 text-white text-lg font-bold" type="submit">Sign in</button>
-                            <button className="active:scale-[.98] active:duration-75 hover:scale-[1.01] ease-in-out transition-all flex rounded-xl py-2.5 border-2 border-gray-200 items-center justify-center gap-2">
+                            {/* <button className="active:scale-[.98] active:duration-75 hover:scale-[1.01] ease-in-out transition-all flex rounded-xl py-2.5 border-2 border-gray-200 items-center justify-center gap-2">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5.26644 9.76453C6.19903 6.93863 8.85469 4.90909 12.0002 4.90909C13.6912 4.90909 15.2184 5.50909 16.4184 6.49091L19.9093 3C17.7821 1.14545 15.0548 0 12.0002 0C7.27031 0 3.19799 2.6983 1.24023 6.65002L5.26644 9.76453Z" fill="#EA4335" />
                                     <path d="M16.0406 18.0142C14.9508 18.718 13.5659 19.0926 11.9998 19.0926C8.86633 19.0926 6.21896 17.0785 5.27682 14.2695L1.2373 17.3366C3.19263 21.2953 7.26484 24.0017 11.9998 24.0017C14.9327 24.0017 17.7352 22.959 19.834 21.0012L16.0406 18.0142Z" fill="#34A853" />
@@ -187,7 +188,7 @@ const Login = () => {
                                     <path d="M5.27698 14.2663C5.03833 13.5547 4.90909 12.7922 4.90909 11.9984C4.90909 11.2167 5.03444 10.4652 5.2662 9.76294L1.23999 6.64844C0.436587 8.25884 0 10.0738 0 11.9984C0 13.918 0.444781 15.7286 1.23746 17.3334L5.27698 14.2663Z" fill="#FBBC05" />
                                 </svg>
                                 Sign in with Google
-                            </button>
+                            </button> */}
                               {/* <div className="googleContainer"
                                 id='signInDiv'
                             >

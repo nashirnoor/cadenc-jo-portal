@@ -12,6 +12,7 @@ import axios from "axios";
 import { FaUsers } from "react-icons/fa";
 import { toast } from 'sonner';
 import JobCard from "./JobCard";
+import { BASE_URL } from "../../utils/config";
 
 
 
@@ -49,7 +50,7 @@ const CompanyProfileUser = () => {
                     throw new Error("JWT token is missing");
                 }
     
-                const response = await axios.get(`http://127.0.0.1:8000/api/v1/auth/company-jobs/${id}/`, {
+                const response = await axios.get(`${BASE_URL}/api/v1/auth/company-jobs/${id}/`, {
                     headers: {
                         'Authorization': `Bearer ${jwt_access}`,
                     }
@@ -81,7 +82,7 @@ const CompanyProfileUser = () => {
                     throw new Error("JWT token is missing");
                 }
 
-                const response = await axios.get(`http://127.0.0.1:8000/api/v1/auth/company-profile-user/${id}/`, {
+                const response = await axios.get(`${BASE_URL}/api/v1/auth/company-profile-user/${id}/`, {
                     headers: {
                         'Authorization': `Bearer ${jwt_access}`,
                     }

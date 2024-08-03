@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import EducationAdd from './EducationAdd';
 import Experienceadd from './Experienceadd';
 import Modal from './Modal';
+import { BASE_URL } from '../../utils/config';
 
 
 const UserProfile = () => {
@@ -52,7 +53,7 @@ const UserProfile = () => {
   const fetchExperiences = async () => {
     try {
       const jwt_access = JSON.parse(localStorage.getItem('access'));
-      const response = await axios.get('http://localhost:8000/api/v1/auth/experience/', {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/experience/`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`
         }
@@ -73,7 +74,7 @@ const UserProfile = () => {
       try {
         const jwt_access = JSON.parse(localStorage.getItem('access'));
 
-        const response = await axios.get('http://localhost:8000/api/v1/auth/education/', {
+        const response = await axios.get(`${BASE_URL}/api/v1/auth/education/`, {
           headers: {
             'Authorization': `Bearer ${jwt_access}`
           }
@@ -98,7 +99,7 @@ const UserProfile = () => {
   const fetchProfileData = async () => {
     try {
       const jwt_access = JSON.parse(localStorage.getItem('access'));
-      const response = await axios.get('http://localhost:8000/api/v1/auth/user-profile/', {
+      const response = await axios.get(`${BASE_URL}/api/v1/auth/user-profile/`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`
         }
@@ -113,7 +114,7 @@ const UserProfile = () => {
   const checkprofile = () => {
     try {
       const jwt_access = JSON.parse(localStorage.getItem('access'));
-      const userProfileRes = axios.get('http://localhost:8000/api/v1/auth/check-user-profile/', {
+      const userProfileRes = axios.get(`${BASE_URL}/api/v1/auth/check-user-profile/`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`
         }
@@ -143,7 +144,7 @@ const UserProfile = () => {
     try {
       const jwt_access = JSON.parse(localStorage.getItem('access'));
 
-      const response = await fetch('http://localhost:8000/api/v1/auth/update-profile/', {
+      const response = await fetch(`${BASE_URL}/api/v1/auth/update-profile/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +168,7 @@ const UserProfile = () => {
   const handleDeleteEducation = async (educationId) => {
     try {
       const jwt_access = JSON.parse(localStorage.getItem('access'));
-      await axios.delete(`http://localhost:8000/api/v1/auth/education/${educationId}/`, {
+      await axios.delete(`${BASE_URL}/api/v1/auth/education/${educationId}/`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`
         }
@@ -182,7 +183,7 @@ const UserProfile = () => {
   const handleDeleteExperience = async (experienceId) => {
     try {
       const jwt_access = JSON.parse(localStorage.getItem('access'));
-      await axios.delete(`http://localhost:8000/api/v1/auth/experience/${experienceId}/`, {
+      await axios.delete(`${BASE_URL}/api/v1/auth/experience/${experienceId}/`, {
         headers: {
           'Authorization': `Bearer ${jwt_access}`
         }

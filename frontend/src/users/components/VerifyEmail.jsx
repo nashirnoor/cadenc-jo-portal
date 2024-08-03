@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { BASE_URL } from '../../utils/config';
 
 const VerifyEmail = () => {
     const [otp, setOtp] = useState("");
@@ -27,7 +28,7 @@ const VerifyEmail = () => {
         if (otp) {
             setIsLoading(true);
             try {
-                const response = await axios.post("http://localhost:8000/api/v1/auth/verify-email/", { 'otp': otp });
+                const response = await axios.post(`${BASE_URL}/api/v1/auth/verify-email/`, { 'otp': otp });
                 if (response.status === 200) {
                     toast.success(response.data.message);
                     navigate("/");
@@ -48,7 +49,7 @@ const VerifyEmail = () => {
     const handleResendOtp = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.post("http://localhost:8000/api/v1/auth/resend-otp/");
+            const response = await axios.post(`${BASE_URL}/api/v1/auth/resend-otp/`);
             if (response.status === 200) {
                 toast.success("OTP has been resent to your email");
                 setTimeLeft(60); // Reset timer

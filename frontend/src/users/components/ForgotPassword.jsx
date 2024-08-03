@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import axiosInstance from '../utils/axiosInstance'
 import { toast } from 'sonner';
+import { BASE_URL } from '../../utils/config';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("")
